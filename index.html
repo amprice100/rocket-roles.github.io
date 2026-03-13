@@ -1,1402 +1,576 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rocket Roles</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0a0a12;
-      --surface: #13131f;
-      --surface2: #1c1c30;
-      --gold: #f5c842;
-      --gold2: #e8a020;
-      --red: #e03535;
-      --blue: #3d8ef0;
-      --green: #2ecc80;
-      --purple: #9b59f5;
-      --text: #ede5cc;
-      --muted: #5a5a7a;
-      --border: rgba(200, 149, 42, 0.18);
-      --card-bg: #1a160a;
-      --card-border: #c8952a;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      min-height: 100vh;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Barlow', sans-serif;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse at 15% 40%, rgba(61, 142, 240, .07) 0%, transparent 55%),
-        radial-gradient(ellipse at 85% 15%, rgba(155, 89, 245, .06) 0%, transparent 55%),
-        radial-gradient(ellipse at 55% 85%, rgba(245, 200, 66, .04) 0%, transparent 50%);
-    }
-
-    .wrap {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 20px 16px 80px;
-      position: relative;
-      z-index: 1;
-    }
-
-    header {
-      text-align: center;
-      padding: 32px 0 18px;
-    }
-
-    header h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(52px, 12vw, 88px);
-      letter-spacing: 5px;
-      line-height: 1;
-      background: linear-gradient(140deg, #ffe566, #f5c842, #e8a020);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 24px rgba(245, 200, 66, .45));
-    }
-
-    header .sub {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px;
-      letter-spacing: 7px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 5px;
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 18px 0 26px;
-    }
-
-    .screen {
-      display: none;
-    }
-
-    .screen.active {
-      display: block;
-      animation: fadeUp .28s ease;
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(10px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
-      }
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 20px;
-      margin-bottom: 16px;
-    }
-
-    .panel-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px;
-      letter-spacing: 2px;
-      color: var(--gold);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn {
-      font-family: 'Bebas Neue', sans-serif;
-      letter-spacing: 1.5px;
-      border: none;
-      cursor: pointer;
-      border-radius: 9px;
-      transition: all .17s;
-      padding: 11px 22px;
-      font-size: 19px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn:disabled {
-      opacity: .3;
-      cursor: not-allowed;
-      transform: none !important;
-      filter: none !important;
-    }
-
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      color: #111;
-    }
-
-    .btn-gold:not(:disabled):hover {
-      filter: brightness(1.13);
-      transform: translateY(-1px);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid rgba(200, 149, 42, .35);
-      color: var(--gold);
-    }
-
-    .btn-outline:hover {
-      background: rgba(245, 200, 66, .07);
-      border-color: var(--gold);
-    }
-
-    .btn-red {
-      background: rgba(224, 53, 53, .18);
-      border: 1px solid rgba(224, 53, 53, .4);
-      color: #e07070;
-    }
-
-    .btn-red:hover {
-      background: rgba(224, 53, 53, .28);
-    }
-
-    .btn-full {
-      width: 100%;
-      padding: 13px;
-      font-size: 22px;
-      letter-spacing: 2px;
-    }
-
-    .btn-sm {
-      padding: 6px 14px;
-      font-size: 15px;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .btn-group .btn {
-      flex: 1;
-    }
-
-    input[type=text] {
-      background: var(--surface2);
-      border: 1px solid rgba(200, 149, 42, .28);
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: var(--text);
-      font-family: 'Barlow', sans-serif;
-      font-size: 15px;
-      outline: none;
-      transition: border-color .2s;
-      width: 100%;
-    }
-
-    input:focus {
-      border-color: var(--gold);
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .input-row input {
-      flex: 1;
-      margin-bottom: 0;
-    }
-
-    .room-options {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .or-divider {
-      text-align: center;
-      position: relative;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      letter-spacing: 4px;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-
-    .or-divider::before,
-    .or-divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 38%;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .or-divider::before {
-      left: 0;
-    }
-
-    .or-divider::after {
-      right: 0;
-    }
-
-    .lobby-players {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .lobby-player {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 11px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 19px;
-      font-weight: 600;
-      animation: fadeUp .2s ease;
-    }
-
-    .lobby-player .you-tag {
-      font-size: 11px;
-      background: rgba(245, 200, 66, .15);
-      border: 1px solid rgba(245, 200, 66, .35);
-      border-radius: 20px;
-      padding: 1px 10px;
-      color: var(--gold);
-      font-family: 'Bebas Neue', sans-serif;
-      letter-spacing: 1px;
-      margin-left: auto;
-    }
-
-    .dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .room-code-box {
-      background: var(--card-bg);
-      border: 2px solid var(--card-border);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .room-code-box .label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .room-code-box .code {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 52px;
-      letter-spacing: 10px;
-      color: var(--gold);
-      filter: drop-shadow(0 0 16px rgba(245, 200, 66, .4));
-    }
-
-    .room-code-box .share-link {
-      font-size: 11px;
-      color: var(--muted);
-      word-break: break-all;
-      margin-top: 8px;
-      font-family: 'Barlow Condensed', sans-serif;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    @media(max-width:480px) {
-      .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .ctoggle {
-      background: var(--card-bg);
-      border: 2px solid rgba(200, 149, 42, .3);
-      border-radius: 9px;
-      padding: 10px 6px;
-      cursor: pointer;
-      text-align: center;
-      opacity: .32;
-      transition: all .2s;
-      position: relative;
-    }
-
-    .ctoggle .ce {
-      font-size: 24px;
-      display: block;
-      margin-bottom: 3px;
-    }
-
-    .ctoggle .cn {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: var(--gold);
-    }
-
-    .ctoggle.on {
-      opacity: 1;
-      border-color: var(--card-border);
-    }
-
-    .ctoggle.on::after {
-      content: '✓';
-      position: absolute;
-      top: 4px;
-      right: 5px;
-      font-size: 10px;
-      color: var(--green);
-    }
-
-    .scoring-rules {
-      background: var(--surface2);
-      border: 1px solid rgba(245, 200, 66, .12);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 20px;
-    }
-
-    .scoring-rules-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 13px;
-      letter-spacing: 3px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .rule-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 6px 0;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      line-height: 1.4;
-      border-bottom: 1px solid rgba(255, 255, 255, .04);
-    }
-
-    .rule-row:last-child {
-      border-bottom: none;
-    }
-
-    .rule-pts {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 19px;
-      min-width: 44px;
-      flex-shrink: 0;
-    }
-
-    .pts-pos {
-      color: var(--green);
-    }
-
-    .pts-neg {
-      color: var(--red);
-    }
-
-    .pts-neu {
-      color: var(--gold);
-    }
-
-    .waiting-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 20px;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .waiting-card .spin {
-      font-size: 42px;
-      animation: rotateSpin 2s linear infinite;
-    }
-
-    @keyframes rotateSpin {
-      to {
-        transform: rotate(360deg)
-      }
-    }
-
-    .waiting-card h2 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      letter-spacing: 2px;
-      color: var(--gold);
-    }
-
-    .role-card-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .role-card {
-      background: linear-gradient(160deg, #2a2210, #191408, #2a2210);
-      border: 3px solid var(--card-border);
-      border-radius: 18px;
-      padding: 30px 28px;
-      width: min(300px, 90vw);
-      text-align: center;
-      box-shadow: 0 0 50px rgba(200, 149, 42, .22), inset 0 1px 0 rgba(255, 255, 255, .04);
-      position: relative;
-      overflow: hidden;
-      animation: cardFlip .4s cubic-bezier(.4, 0, .2, 1);
-    }
-
-    @keyframes cardFlip {
-      from {
-        transform: rotateY(90deg) scale(.9);
-        opacity: 0
-      }
-
-      to {
-        transform: rotateY(0) scale(1);
-        opacity: 1
-      }
-    }
-
-    .role-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(45deg, transparent, transparent 22px, rgba(200, 149, 42, .018) 22px, rgba(200, 149, 42, .018) 23px);
-    }
-
-    .role-card .rc-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 38px;
-      letter-spacing: 3px;
-      text-shadow: 0 0 20px currentColor;
-      margin-bottom: 14px;
-      position: relative;
-    }
-
-    .role-card .rc-emoji {
-      font-size: 72px;
-      margin-bottom: 14px;
-      display: block;
-      position: relative;
-      filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .6));
-    }
-
-    .role-card .rc-obj-label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900;
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: var(--red);
-      text-transform: uppercase;
-      margin-bottom: 5px;
-      position: relative;
-    }
-
-    .role-card .rc-obj {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 21px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.3;
-      position: relative;
-    }
-
-    .role-card .rc-desc {
-      font-size: 13px;
-      color: #8a8070;
-      font-style: italic;
-      margin-top: 12px;
-      line-height: 1.5;
-      position: relative;
-    }
-
-    .fool-hint-box {
-      margin-top: 14px;
-      background: rgba(155, 89, 245, .12);
-      border: 1px solid rgba(155, 89, 245, .35);
-      border-radius: 8px;
-      padding: 12px 14px;
-      text-align: left;
-      position: relative;
-      font-size: 13px;
-      line-height: 1.5;
-      color: rgba(200, 180, 255, .85);
-    }
-
-    .fool-hint-box strong {
-      color: #c8a0ff;
-    }
-
-    .status-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .chip {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      letter-spacing: .5px;
-    }
-
-    .chip-gold {
-      background: rgba(245, 200, 66, .12);
-      border: 1px solid rgba(245, 200, 66, .3);
-      color: var(--gold);
-    }
-
-    .chip-blue {
-      background: rgba(61, 142, 240, .12);
-      border: 1px solid rgba(61, 142, 240, .3);
-      color: var(--blue);
-    }
-
-    .obj-note {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      color: var(--muted);
-      background: var(--surface2);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      line-height: 1.6;
-      border-left: 3px solid rgba(245, 200, 66, .3);
-    }
-
-    .obj-note strong {
-      color: var(--gold);
-    }
-
-    .obj-toggle {
-      background: var(--surface2);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    .obj-toggle:hover {
-      border-color: rgba(200, 149, 42, .4);
-    }
-
-    .obj-toggle.done {
-      border-color: var(--green);
-      background: rgba(46, 204, 128, .08);
-    }
-
-    .obj-toggle .ot-check {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      flex-shrink: 0;
-      border: 2px solid var(--muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: all .2s;
-    }
-
-    .obj-toggle.done .ot-check {
-      background: var(--green);
-      border-color: var(--green);
-    }
-
-    .obj-toggle .ot-text {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 19px;
-      font-weight: 700;
-    }
-
-    .obj-toggle .ot-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-      font-family: 'Barlow Condensed';
-    }
-
-    .vote-target {
-      margin-bottom: 26px;
-    }
-
-    .vote-target-header {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px;
-      letter-spacing: 1.5px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .vote-target-sub {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .vote-options {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 8px;
-    }
-
-    .vote-btn {
-      background: var(--card-bg);
-      border: 2px solid rgba(200, 149, 42, .25);
-      border-radius: 10px;
-      padding: 12px 8px;
-      cursor: pointer;
-      text-align: center;
-      transition: all .17s;
-      font-family: 'Barlow Condensed', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .vote-btn:hover {
-      border-color: var(--gold);
-      transform: translateY(-2px);
-    }
-
-    .vote-btn.selected {
-      border-color: var(--blue);
-      background: rgba(61, 142, 240, .13);
-      box-shadow: 0 0 12px rgba(61, 142, 240, .22);
-    }
-
-    .vote-btn .ve {
-      font-size: 26px;
-    }
-
-    .vote-btn .vn {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .5px;
-      color: var(--gold);
-    }
-
-    .vote-progress {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      text-align: center;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    .vote-progress strong {
-      color: var(--gold);
-    }
-
-    .result-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
-      animation: fadeUp .3s ease both;
-    }
-
-    .result-top {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .ri-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px;
-      letter-spacing: 1px;
-    }
-
-    .ri-card {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px;
-      letter-spacing: 1px;
-      padding: 3px 10px;
-      border-radius: 6px;
-      border: 1px solid;
-    }
-
-    .ri-delta {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 26px;
-      margin-left: auto;
-    }
-
-    .result-breakdown {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      border-top: 1px solid rgba(255, 255, 255, .05);
-      padding-top: 10px;
-    }
-
-    .bd-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 5px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, .04);
-    }
-
-    .bd-row:last-child {
-      border-bottom: none;
-      border-top: 1px solid rgba(255, 255, 255, .07);
-      padding-top: 8px;
-      margin-top: 4px;
-    }
-
-    .bd-label {
-      color: var(--muted);
-    }
-
-    .bd-val {
-      font-weight: 700;
-      font-size: 16px;
-    }
-
-    .bd-pos {
-      color: var(--green);
-    }
-
-    .bd-neg {
-      color: var(--red);
-    }
-
-    .bd-neu {
-      color: var(--text);
-    }
-
-    .bd-gold {
-      color: var(--gold);
-    }
-
-    .fool-reveal {
-      background: rgba(155, 89, 245, .1);
-      border: 1px solid rgba(155, 89, 245, .4);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px;
-      color: rgba(200, 180, 255, .9);
-    }
-
-    .sb {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .sb-head {
-      padding: 12px 18px;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 17px;
-      letter-spacing: 3px;
-      color: var(--gold);
-      background: rgba(245, 200, 66, .07);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sb-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, .04);
-    }
-
-    .sb-row:last-child {
-      border-bottom: none;
-    }
-
-    .sb-rank {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px;
-      color: var(--muted);
-      width: 26px;
-    }
-
-    .sb-name {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      flex: 1;
-    }
-
-    .sb-bar-wrap {
-      flex: 2;
-      height: 5px;
-      background: rgba(255, 255, 255, .06);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .sb-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold2), var(--gold));
-      border-radius: 3px;
-      transition: width .7s ease;
-    }
-
-    .sb-pts {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 24px;
-      color: var(--gold);
-    }
-
-    .sec-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px;
-      letter-spacing: 3px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .sec-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255, 255, 255, .06);
-    }
-
-    .notif {
-      position: fixed;
-      bottom: 22px;
-      right: 20px;
-      z-index: 999;
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 12px 18px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 17px;
-      font-weight: 600;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
-      animation: notifIn .3s ease, notifOut .3s 2.5s forwards;
-    }
-
-    .notif-gold {
-      border: 1px solid var(--gold);
-      color: var(--gold);
-    }
-
-    .notif-red {
-      border: 1px solid var(--red);
-      color: #e08080;
-    }
-
-    .notif-green {
-      border: 1px solid var(--green);
-      color: var(--green);
-    }
-
-    @keyframes notifIn {
-      from {
-        transform: translateY(14px);
-        opacity: 0
-      }
-
-      to {
-        transform: translateY(0);
-        opacity: 1
-      }
-    }
-
-    @keyframes notifOut {
-      to {
-        opacity: 0;
-        pointer-events: none
-      }
-    }
-
-    .admin-panel {
-      background: rgba(245, 200, 66, .04);
-      border: 1px solid rgba(245, 200, 66, .15);
-      border-radius: 12px;
-      padding: 16px 18px;
-      margin-bottom: 14px;
-    }
-
-    .admin-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 13px;
-      letter-spacing: 3px;
-      color: rgba(245, 200, 66, .45);
-      margin-bottom: 10px;
-    }
-
-    .mb16 {
-      margin-bottom: 16px;
-    }
-
-    .mb20 {
-      margin-bottom: 20px;
-    }
-
-    .text-center {
-      text-align: center;
-    }
-
-    .text-muted {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .online-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      margin-right: 5px;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: .4
-      }
-    }
-
-    label.checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 17px;
-      margin-bottom: 10px;
-    }
-
-    label.checkbox-row input {
-      width: 17px;
-      height: 17px;
-      accent-color: var(--gold);
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rocket Roles</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a12; --surface:#13131f; --surface2:#1c1c30;
+  --gold:#f5c842; --gold2:#e8a020; --red:#e03535;
+  --blue:#3d8ef0; --green:#2ecc80; --purple:#9b59f5;
+  --text:#ede5cc; --muted:#5a5a7a;
+  --border:rgba(200,149,42,0.18);
+  --card-bg:#1a160a; --card-border:#c8952a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 40%,rgba(61,142,240,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 15%,rgba(155,89,245,.06) 0%,transparent 55%),
+    radial-gradient(ellipse at 55% 85%,rgba(245,200,66,.04) 0%,transparent 50%);}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px 80px;position:relative;z-index:1;}
+
+header{text-align:center;padding:32px 0 18px;}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,12vw,88px);letter-spacing:5px;line-height:1;
+  background:linear-gradient(140deg,#ffe566,#f5c842,#e8a020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 24px rgba(245,200,66,.45));}
+header .sub{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:7px;text-transform:uppercase;color:var(--muted);margin-top:5px;}
+.divider{height:1px;background:var(--border);margin:18px 0 26px;}
+
+.screen{display:none;}
+.screen.active{display:block;animation:fadeUp .28s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 20px;margin-bottom:16px;}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+.btn{font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;border:none;cursor:pointer;border-radius:9px;transition:all .17s;padding:11px 22px;font-size:19px;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none !important;filter:none !important;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;}
+.btn-gold:not(:disabled):hover{filter:brightness(1.13);transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid rgba(200,149,42,.35);color:var(--gold);}
+.btn-outline:hover{background:rgba(245,200,66,.07);border-color:var(--gold);}
+.btn-red{background:rgba(224,53,53,.18);border:1px solid rgba(224,53,53,.4);color:#e07070;}
+.btn-red:hover{background:rgba(224,53,53,.28);}
+.btn-green{background:linear-gradient(135deg,#2ecc80,#27ae60);color:#111;}
+.btn-green:not(:disabled):hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-full{width:100%;padding:13px;font-size:22px;letter-spacing:2px;}
+.btn-sm{padding:6px 14px;font-size:15px;}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-group .btn{flex:1;}
+
+input[type=text]{background:var(--surface2);border:1px solid rgba(200,149,42,.28);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+input:focus{border-color:var(--gold);}
+.input-row{display:flex;gap:10px;margin-bottom:12px;}
+.input-row input{flex:1;margin-bottom:0;}
+
+.room-options{display:flex;flex-direction:column;gap:16px;}
+.or-divider{text-align:center;position:relative;font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;}
+.or-divider::before,.or-divider::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:var(--border);}
+.or-divider::before{left:0;}.or-divider::after{right:0;}
+
+.lobby-players{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.lobby-player{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 16px;display:flex;align-items:center;gap:10px;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:600;animation:fadeUp .2s ease;}
+.lobby-player .you-tag{font-size:11px;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.35);border-radius:20px;padding:1px 10px;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-left:auto;}
+.lobby-player .host-tag{font-size:11px;background:rgba(224,53,53,.15);border:1px solid rgba(224,53,53,.35);border-radius:20px;padding:1px 10px;color:#e07070;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+.dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+
+.room-code-box{background:var(--card-bg);border:2px solid var(--card-border);border-radius:12px;padding:18px;text-align:center;margin-bottom:16px;}
+.room-code-box .label{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.room-code-box .code{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:10px;color:var(--gold);filter:drop-shadow(0 0 16px rgba(245,200,66,.4));}
+.room-code-box .share-link{font-size:11px;color:var(--muted);word-break:break-all;margin-top:8px;font-family:'Barlow Condensed',sans-serif;}
+
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:480px){.card-grid{grid-template-columns:repeat(2,1fr);}}
+.ctoggle{background:var(--card-bg);border:2px solid rgba(200,149,42,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;opacity:.32;transition:all .2s;position:relative;}
+.ctoggle .ce{font-size:24px;display:block;margin-bottom:3px;}
+.ctoggle .cn{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);}
+.ctoggle.on{opacity:1;border-color:var(--card-border);}
+.ctoggle.on::after{content:'✓';position:absolute;top:4px;right:5px;font-size:10px;color:var(--green);}
+
+.scoring-rules{background:var(--surface2);border:1px solid rgba(245,200,66,.12);border-radius:10px;padding:14px 16px;margin-bottom:20px;}
+.scoring-rules-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--muted);margin-bottom:10px;}
+.rule-row{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-family:'Barlow Condensed',sans-serif;font-size:15px;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.04);}
+.rule-row:last-child{border-bottom:none;}
+.rule-pts{font-family:'Bebas Neue',sans-serif;font-size:19px;min-width:48px;flex-shrink:0;}
+.pts-pos{color:var(--green);}.pts-neg{color:var(--red);}.pts-neu{color:var(--gold);}
+
+.waiting-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:16px;text-align:center;}
+.waiting-card .spin{font-size:42px;animation:rotateSpin 2s linear infinite;}
+@keyframes rotateSpin{to{transform:rotate(360deg)}}
+.waiting-card h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--gold);}
+
+/* ── ROLE CARD — animation only on first render, not re-renders ── */
+.role-card-wrap{display:flex;justify-content:center;margin-bottom:20px;}
+.role-card{background:linear-gradient(160deg,#2a2210,#191408,#2a2210);border:3px solid var(--card-border);border-radius:18px;padding:30px 28px;width:min(300px,90vw);text-align:center;box-shadow:0 0 50px rgba(200,149,42,.22),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden;}
+.role-card.animate-in{animation:cardFlip .4s cubic-bezier(.4,0,.2,1);}
+@keyframes cardFlip{from{transform:rotateY(90deg) scale(.9);opacity:0}to{transform:rotateY(0) scale(1);opacity:1}}
+.role-card::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(200,149,42,.018) 22px,rgba(200,149,42,.018) 23px);}
+.role-card .rc-name{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:3px;text-shadow:0 0 20px currentColor;margin-bottom:14px;position:relative;}
+.role-card .rc-emoji{font-size:72px;margin-bottom:14px;display:block;position:relative;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6));}
+.role-card .rc-obj-label{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:5px;position:relative;}
+.role-card .rc-obj{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:700;color:var(--text);line-height:1.3;position:relative;}
+.role-card .rc-desc{font-size:13px;color:#8a8070;font-style:italic;margin-top:12px;line-height:1.5;position:relative;}
+.fool-hint-box{margin-top:14px;background:rgba(155,89,245,.12);border:1px solid rgba(155,89,245,.35);border-radius:8px;padding:12px 14px;text-align:left;position:relative;font-size:13px;line-height:1.5;color:rgba(200,180,255,.85);}
+.fool-hint-box strong{color:#c8a0ff;}
+
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;padding:4px 12px;border-radius:20px;letter-spacing:.5px;}
+.chip-gold{background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);color:var(--gold);}
+.chip-blue{background:rgba(61,142,240,.12);border:1px solid rgba(61,142,240,.3);color:var(--blue);}
+
+.obj-note{font-family:'Barlow Condensed',sans-serif;font-size:15px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:12px;line-height:1.6;border-left:3px solid rgba(245,200,66,.3);}
+.obj-note strong{color:var(--gold);}
+
+.obj-toggle{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;}
+.obj-toggle:hover{border-color:rgba(200,149,42,.4);}
+.obj-toggle.done{border-color:var(--green);background:rgba(46,204,128,.08);}
+.obj-toggle .ot-check{width:32px;height:32px;border-radius:8px;flex-shrink:0;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;}
+.obj-toggle.done .ot-check{background:var(--green);border-color:var(--green);}
+.obj-toggle .ot-text{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;}
+.obj-toggle .ot-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:'Barlow Condensed';}
+
+/* ── READY UP ── */
+.ready-section{margin-bottom:16px;}
+.ready-btn-wrap{margin-bottom:12px;}
+.ready-tracker{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.ready-tracker-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--muted);margin-bottom:10px;}
+.ready-player-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:'Barlow Condensed',sans-serif;font-size:16px;}
+.ready-player-row:last-child{border-bottom:none;}
+.ready-icon{font-size:16px;margin-left:auto;}
+.ready-count{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);margin-top:10px;text-align:center;}
+.ready-count span{color:var(--gold);}
+
+/* ── HOST CONTROLS ── */
+.host-panel{background:rgba(224,53,53,.04);border:1px solid rgba(224,53,53,.18);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.host-label{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(224,100,100,.6);margin-bottom:10px;}
+
+.vote-target{margin-bottom:26px;}
+.vote-target-header{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.vote-target-sub{font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--muted);margin-bottom:10px;}
+.vote-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;}
+.vote-btn{background:var(--card-bg);border:2px solid rgba(200,149,42,.25);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .17s;font-family:'Barlow Condensed',sans-serif;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.vote-btn:hover{border-color:var(--gold);transform:translateY(-2px);}
+.vote-btn.selected{border-color:var(--blue);background:rgba(61,142,240,.13);box-shadow:0 0 12px rgba(61,142,240,.22);}
+.vote-btn .ve{font-size:26px;}
+.vote-btn .vn{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--gold);}
+.vote-progress{font-family:'Barlow Condensed',sans-serif;font-size:15px;text-align:center;color:var(--muted);margin-bottom:16px;}
+.vote-progress strong{color:var(--gold);}
+
+.result-item{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:fadeUp .3s ease both;}
+.result-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.ri-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;}
+.ri-card{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;padding:3px 10px;border-radius:6px;border:1px solid;}
+.ri-delta{font-family:'Bebas Neue',sans-serif;font-size:26px;margin-left:auto;}
+.result-breakdown{display:flex;flex-direction:column;gap:0;font-family:'Barlow Condensed',sans-serif;font-size:15px;border-top:1px solid rgba(255,255,255,.05);padding-top:10px;}
+.bd-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.bd-row:last-child{border-bottom:none;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;margin-top:4px;}
+.bd-label{color:var(--muted);}
+.bd-val{font-weight:700;font-size:16px;}
+.bd-pos{color:var(--green);}.bd-neg{color:var(--red);}.bd-neu{color:var(--text);}.bd-gold{color:var(--gold);}
+
+.fool-reveal{background:rgba(155,89,245,.1);border:1px solid rgba(155,89,245,.4);border-radius:10px;padding:14px 16px;margin-bottom:12px;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(200,180,255,.9);}
+
+.sb{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.sb-head{padding:12px 18px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;color:var(--gold);background:rgba(245,200,66,.07);border-bottom:1px solid var(--border);}
+.sb-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.04);}
+.sb-row:last-child{border-bottom:none;}
+.sb-rank{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);width:26px;}
+.sb-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;flex:1;}
+.sb-bar-wrap{flex:2;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.sb-bar{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:3px;transition:width .7s ease;}
+.sb-pts{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold);}
+
+.sec-label{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.sec-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06);}
+
+.notif{position:fixed;bottom:22px;right:20px;z-index:999;background:var(--surface2);border-radius:10px;padding:12px 18px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:notifIn .3s ease,notifOut .3s 2.5s forwards;}
+.notif-gold{border:1px solid var(--gold);color:var(--gold);}
+.notif-red{border:1px solid var(--red);color:#e08080;}
+.notif-green{border:1px solid var(--green);color:var(--green);}
+@keyframes notifIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes notifOut{to{opacity:0;pointer-events:none}}
+
+.mb16{margin-bottom:16px;}.mb20{margin-bottom:20px;}
+.text-center{text-align:center;}
+.text-muted{color:var(--muted);font-size:14px;}
+.online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+label.checkbox-row{display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:17px;margin-bottom:10px;}
+label.checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
+</style>
 </head>
-
 <body>
-  <div class="wrap">
-    <header>
-      <h1>ROCKET ROLES</h1>
-      <div class="sub">Rocket League Secret Card Game</div>
-    </header>
-    <div class="divider"></div>
+<div class="wrap">
+  <header>
+    <h1>ROCKET ROLES</h1>
+    <div class="sub">Rocket League Secret Card Game</div>
+  </header>
+  <div class="divider"></div>
 
-    <!-- JOIN / CREATE -->
-    <div id="join-screen" class="screen active">
-      <div class="panel mb16">
-        <div class="panel-title">👤 Your Name</div>
-        <input type="text" id="your-name" placeholder="Enter your name..." maxlength="20">
-      </div>
-      <div class="room-options">
-        <div class="panel">
-          <div class="panel-title">🎮 Create a New Room</div>
-          <p class="text-muted mb16" style="font-family:'Barlow Condensed';font-size:16px;line-height:1.5;">Share the
-            room code — anyone can start or control the game.</p>
-          <button class="btn btn-gold btn-full" onclick="createRoom()">CREATE ROOM</button>
-        </div>
-        <div class="or-divider">or</div>
-        <div class="panel">
-          <div class="panel-title">🔗 Join Existing Room</div>
-          <div class="input-row">
-            <input type="text" id="join-code" placeholder="XXXXX" maxlength="5"
-              style="font-size:28px;text-align:center;letter-spacing:8px;font-family:'Bebas Neue',sans-serif;text-transform:uppercase;">
-          </div>
-          <button class="btn btn-outline btn-full" onclick="joinRoom()">JOIN ROOM</button>
-        </div>
-      </div>
+  <!-- JOIN / CREATE -->
+  <div id="join-screen" class="screen active">
+    <div class="panel mb16">
+      <div class="panel-title">👤 Your Name</div>
+      <input type="text" id="your-name" placeholder="Enter your name..." maxlength="20">
     </div>
-
-    <!-- LOBBY -->
-    <div id="lobby-screen" class="screen">
-      <div class="room-code-box mb16">
-        <div class="label">Room Code — Share This</div>
-        <div class="code" id="lobby-code">—</div>
-        <div class="share-link" id="lobby-link"></div>
-      </div>
-      <div class="panel mb16">
-        <div class="panel-title">👥 Players <span id="lobby-count" class="chip chip-blue"
-            style="font-size:15px;">0</span></div>
-        <div class="lobby-players" id="lobby-players"></div>
-        <p class="text-muted" style="font-family:'Barlow Condensed';font-size:15px;">Waiting for everyone to join...</p>
-      </div>
-      <div class="panel mb16">
-        <div class="panel-title">⚙️ Settings</div>
-        <div class="sec-label" style="margin-bottom:10px;">Cards in Pool</div>
-        <div class="card-grid mb16" id="lobby-card-toggles"></div>
-        <div class="sec-label" style="margin-bottom:10px;">Options</div>
-        <label class="checkbox-row"><input type="checkbox" id="opt-fool-hint" checked> Show the Fool their decoy role to
-          act as</label>
-      </div>
-      <div class="scoring-rules mb16">
-        <div class="scoring-rules-title">📋 SCORING RULES</div>
-        <div class="rule-row"><span class="rule-pts pts-pos">+4</span><span>Complete your objective</span></div>
-        <div class="rule-row"><span class="rule-pts pts-neg">−1</span><span>Per player who correctly guesses your card
-            <em style="color:var(--muted)">(stolen from you if you completed, free +1 to them either way)</em></span>
-        </div>
-        <div class="rule-row"><span class="rule-pts pts-pos">+1</span><span>Per correct guess you make on someone else's
-            card</span></div>
-      </div>
-      <button class="btn btn-gold btn-full" id="start-btn" onclick="startGame()" disabled>⚡ START GAME</button>
-      <p class="text-muted text-center" style="margin-top:10px;font-family:'Barlow Condensed';font-size:14px;">Anyone
-        can start once 2+ players have joined</p>
-    </div>
-
-    <!-- GAME -->
-    <div id="game-screen" class="screen">
-      <div class="status-row" id="game-status-chips"></div>
-      <div class="sec-label">Your Secret Card</div>
-      <div class="role-card-wrap" id="role-card-wrap">
-        <div class="role-card">
-          <div class="waiting-card">
-            <div class="spin">⚙️</div>
-            <h2>LOADING...</h2>
-          </div>
-        </div>
-      </div>
-      <div class="sec-label">Did You Complete It?</div>
-      <div class="obj-note">
-        Tap below <strong>after your match</strong> to mark your objective done. Completing earns <strong>+4
-          pts</strong> — but every player who correctly guesses your card <strong>steals 1 pt from you</strong>. If you
-        didn't complete it, correct guessers still get <strong>+1 free</strong> but can't steal from you.
-      </div>
-      <div id="obj-toggle-wrap"></div>
+    <div class="room-options">
       <div class="panel">
-        <div class="panel-title">👥 All Players</div>
-        <div id="all-players-list"></div>
+        <div class="panel-title">🎮 Create a New Room</div>
+        <p class="text-muted mb16" style="font-family:'Barlow Condensed';font-size:16px;line-height:1.5;">You become the <strong style="color:#e07070">Host</strong> — only you can advance the game to the next phase.</p>
+        <button class="btn btn-gold btn-full" onclick="createRoom()">CREATE ROOM</button>
       </div>
-      <div class="admin-panel">
-        <div class="admin-label">🎛️ GAME CONTROLS — ANYONE CAN USE</div>
-        <div class="btn-group">
-          <button class="btn btn-gold" onclick="goToVote()">📊 Start Voting</button>
-          <button class="btn btn-red btn-sm" onclick="rerollCards()">🎲 Reroll</button>
-          <button class="btn btn-red btn-sm" onclick="backToLobby()">↩ Lobby</button>
+      <div class="or-divider">or</div>
+      <div class="panel">
+        <div class="panel-title">🔗 Join Existing Room</div>
+        <div class="input-row">
+          <input type="text" id="join-code" placeholder="XXXXX" maxlength="5"
+            style="font-size:28px;text-align:center;letter-spacing:8px;font-family:'Bebas Neue',sans-serif;text-transform:uppercase;">
         </div>
+        <button class="btn btn-outline btn-full" onclick="joinRoom()">JOIN ROOM</button>
       </div>
     </div>
-
-    <!-- VOTE -->
-    <div id="vote-screen" class="screen">
-      <div class="panel-title" style="margin-bottom:6px;">📊 Guess Everyone's Role</div>
-      <p style="font-family:'Barlow Condensed';font-size:16px;color:var(--muted);margin-bottom:16px;line-height:1.5;">
-        Correct guess = <strong style="color:var(--green)">+1 pt for you</strong>. If they completed their goal, you
-        also <strong style="color:var(--green)">steal 1 pt from them</strong>.
-      </p>
-      <div class="vote-progress mb16">Your guesses submitted: <strong id="my-vote-count">0</strong> / <strong
-          id="my-vote-total">0</strong></div>
-      <div id="vote-panels"></div>
-      <div class="admin-panel">
-        <div class="admin-label">🎛️ GAME CONTROLS</div>
-        <div class="btn-group">
-          <button class="btn btn-gold" onclick="revealResults()">🏆 Reveal Results</button>
-          <button class="btn btn-outline btn-sm" onclick="showScreen('game-screen')">← Back</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RESULTS -->
-    <div id="results-screen" class="screen">
-      <div class="panel-title" style="margin-bottom:16px;">🏆 Round Results</div>
-      <div id="fool-reveals"></div>
-      <div class="sec-label">Score Breakdown</div>
-      <div id="results-list" class="mb20"></div>
-      <div class="sec-label">Scoreboard</div>
-      <div class="sb mb20">
-        <div class="sb-head">TOTAL SCORES</div>
-        <div id="scoreboard"></div>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-gold" style="flex:2;font-size:22px;padding:14px;" onclick="nextRound()">▶ NEXT
-          ROUND</button>
-        <button class="btn btn-outline" onclick="backToLobby()">↩ LOBBY</button>
-      </div>
-    </div>
-
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, update }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  <!-- LOBBY -->
+  <div id="lobby-screen" class="screen">
+    <div class="room-code-box mb16">
+      <div class="label">Room Code — Share This</div>
+      <div class="code" id="lobby-code">—</div>
+      <div class="share-link" id="lobby-link"></div>
+    </div>
+    <div class="panel mb16">
+      <div class="panel-title">👥 Players <span id="lobby-count" class="chip chip-blue" style="font-size:15px;">0</span></div>
+      <div class="lobby-players" id="lobby-players"></div>
+      <p class="text-muted" style="font-family:'Barlow Condensed';font-size:15px;">Waiting for everyone to join...</p>
+    </div>
+    <div class="panel mb16">
+      <div class="panel-title">⚙️ Settings</div>
+      <div class="sec-label" style="margin-bottom:10px;">Cards in Pool</div>
+      <div class="card-grid mb16" id="lobby-card-toggles"></div>
+      <div class="sec-label" style="margin-bottom:10px;">Options</div>
+      <label class="checkbox-row"><input type="checkbox" id="opt-fool-hint" checked> Show the Fool their decoy role to act as</label>
+    </div>
+    <div class="scoring-rules mb16">
+      <div class="scoring-rules-title">📋 SCORING RULES</div>
+      <div class="rule-row"><span class="rule-pts pts-pos">+4</span><span>Complete your objective</span></div>
+      <div class="rule-row"><span class="rule-pts pts-neg">−1</span><span>Per player who correctly guesses your card <em style="color:var(--muted)">(only stolen if you completed; they get +1 either way)</em></span></div>
+      <div class="rule-row"><span class="rule-pts pts-pos">+1</span><span>Per correct guess you make on someone else's card</span></div>
+      <div class="rule-row"><span class="rule-pts pts-neg">−4</span><span><strong style="color:#c8a0ff">FOOL special:</strong> if <em>anyone</em> correctly guesses you're the Fool, you lose all 4 pts</span></div>
+    </div>
+    <!-- Host only sees start btn; others just wait -->
+    <div id="lobby-host-controls"></div>
+    <div id="lobby-guest-msg"></div>
+  </div>
 
-    // ══════════════════════════════════════════════════════════
-    //  🔥 PASTE YOUR FIREBASE CONFIG BELOW
-    // ══════════════════════════════════════════════════════════
-    const firebaseConfig = {
-      apiKey: "AIzaSyDbLeQckNS4LDBdCSQ53Jx_6JY3RKL9llc",
-      authDomain: "rocket-league-game.firebaseapp.com",
-      databaseURL: "https://rocket-league-game-default-rtdb.firebaseio.com",
-      projectId: "rocket-league-game",
-      storageBucket: "rocket-league-game.firebasestorage.app",
-      messagingSenderId: "103132372015",
-      appId: "1:103132372015:web:887a3cc5b0f6eebe75fada"
+  <!-- GAME -->
+  <div id="game-screen" class="screen">
+    <div class="status-row" id="game-status-chips"></div>
+    <div class="sec-label">Your Secret Card</div>
+    <div class="role-card-wrap" id="role-card-wrap">
+      <div class="role-card"><div class="waiting-card"><div class="spin">⚙️</div><h2>LOADING...</h2></div></div>
+    </div>
+    <div class="sec-label">Did You Complete It?</div>
+    <div class="obj-note">
+      Tap below <strong>after your match</strong> to mark your objective done. Completing earns <strong>+4 pts</strong> — but every player who correctly guesses your card <strong>steals 1 pt from you</strong>. If you didn't complete it, correct guessers still get <strong>+1 free</strong> but can't steal from you. <strong style="color:#c8a0ff">Fool special: anyone guessing FOOL correctly wipes all 4 of your points.</strong>
+    </div>
+    <div id="obj-toggle-wrap"></div>
+
+    <!-- Ready-up section (non-host only, shown in game phase) -->
+    <div id="ready-section" class="ready-section" style="display:none;">
+      <div class="ready-btn-wrap" id="ready-btn-wrap"></div>
+      <div class="ready-tracker">
+        <div class="ready-tracker-title">⏳ WAITING FOR PLAYERS TO READY UP</div>
+        <div id="ready-player-list"></div>
+        <div class="ready-count">Ready: <span id="ready-count-num">0</span> / <span id="ready-count-total">0</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">👥 All Players</div>
+      <div id="all-players-list"></div>
+    </div>
+
+    <!-- Host-only controls -->
+    <div id="game-host-controls"></div>
+  </div>
+
+  <!-- VOTE -->
+  <div id="vote-screen" class="screen">
+    <div class="panel-title" style="margin-bottom:6px;">📊 Guess Everyone's Role</div>
+    <p style="font-family:'Barlow Condensed';font-size:16px;color:var(--muted);margin-bottom:16px;line-height:1.5;">
+      Correct guess = <strong style="color:var(--green)">+1 pt for you</strong>. If they completed their goal, you also <strong style="color:var(--green)">steal 1 pt from them</strong>. Guess someone is the <strong style="color:#c8a0ff">Fool</strong> and be right? They lose all 4 pts.
+    </p>
+
+    <!-- Ready-up for vote phase -->
+    <div id="vote-ready-section" style="margin-bottom:16px;"></div>
+
+    <div class="vote-progress mb16">Your guesses submitted: <strong id="my-vote-count">0</strong> / <strong id="my-vote-total">0</strong></div>
+    <div id="vote-panels"></div>
+
+    <!-- Host-only reveal button -->
+    <div id="vote-host-controls"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-screen" class="screen">
+    <div class="panel-title" style="margin-bottom:16px;">🏆 Round Results</div>
+    <div id="fool-reveals"></div>
+    <div class="sec-label">Score Breakdown</div>
+    <div id="results-list" class="mb20"></div>
+    <div class="sec-label">Scoreboard</div>
+    <div class="sb mb20">
+      <div class="sb-head">TOTAL SCORES</div>
+      <div id="scoreboard"></div>
+    </div>
+    <!-- Host-only next round / lobby buttons -->
+    <div id="results-host-controls"></div>
+    <div id="results-guest-msg"></div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ══════════════════════════════════════════════════════════
+//  🔥 PASTE YOUR FIREBASE CONFIG BELOW
+// ══════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDbLeQckNS4LDBdCSQ53Jx_6JY3RKL9llc",
+  authDomain: "rocket-league-game.firebaseapp.com",
+  databaseURL: "https://rocket-league-game-default-rtdb.firebaseio.com",
+  projectId: "rocket-league-game",
+  storageBucket: "rocket-league-game.firebasestorage.app",
+  messagingSenderId: "103132372015",
+  appId: "1:103132372015:web:887a3cc5b0f6eebe75fada"
+};
+// ══════════════════════════════════════════════════════════
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+const CARDS = [
+  { id:'detonator', name:'DETONATOR', emoji:'💣', obj:'Get 3+ Demos',                  color:'#e03535', desc:'Rack up demolitions. Play aggressively.' },
+  { id:'agent',     name:'AGENT',     emoji:'🤝', obj:'Participate in 3+ goals',       color:'#3d8ef0', desc:'Touch the ball before 3+ goals. Goals and assists count.' },
+  { id:'fool',      name:'FOOL',      emoji:'🃏', obj:'Make everyone guess wrong',      color:'#9b59f5', desc:'Act like a different role. If anyone guesses FOOL, you lose all 4 pts.', isFool:true },
+  { id:'guardian',  name:'GUARDIAN',  emoji:'🛡️', obj:'Get 3+ Saves',                  color:'#f5c842', desc:'Stay in net and prioritize saves over offense.' },
+  { id:'king',      name:'KING',      emoji:'👑', obj:"Teammate can't score. Must win.", color:'#e8a020', desc:'Solo carry. Teammate must not score AND you must win.' },
+  { id:'mafia',     name:'MAFIA',     emoji:'🎩', obj:'Lose the game',                  color:'#888',    desc:'Subtly throw without being obvious.', isMafia:true },
+  { id:'pacifist',  name:'PACIFIST',  emoji:'☮️', obj:"Can't score. Must win.",         color:'#2ecc80', desc:"You cannot score goals. Help teammates. Win via assists." },
+  { id:'villager',  name:'VILLAGER',  emoji:'🧱', obj:'Win the game',                   color:'#cd7f32', desc:'Simple: just win. Play normally.' },
+];
+const COLORS = ['#3d8ef0','#e03535','#2ecc80','#f5c842','#9b59f5','#f57c30','#e8a020','#30c8e8'];
+
+let myId         = 'p' + Date.now() + Math.random().toString(36).slice(2,6);
+let myName       = '';
+let roomId       = null;
+let gs           = null;
+let isHost       = false;
+let enabledCards = new Set(CARDS.map(c => c.id));
+let myVotes      = {};
+// Track the last card ID we rendered so we don't re-animate on unrelated updates
+let renderedCardId = null;
+
+const $       = id => document.getElementById(id);
+const cardDef = id => CARDS.find(c => c.id === id);
+const players = ()  => Object.values(gs?.players || {});
+const myCard  = ()  => gs?.assignments?.[myId];
+const amReady = ()  => gs?.ready?.[myId] === true;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function notify(msg, type='gold'){
+  const n = document.createElement('div');
+  n.className = `notif notif-${type}`;
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 2900);
+}
+
+// ── CARD TOGGLES ──────────────────────────────────────────────────────────────
+function renderCardToggles(containerId){
+  const el = $(containerId);
+  el.innerHTML = '';
+  CARDS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'ctoggle' + (enabledCards.has(c.id) ? ' on' : '');
+    d.onclick = () => {
+      enabledCards.has(c.id) ? enabledCards.delete(c.id) : enabledCards.add(c.id);
+      d.classList.toggle('on');
+      if(roomId) syncSettings();
     };
-    // ══════════════════════════════════════════════════════════
+    d.innerHTML = `<span class="ce">${c.emoji}</span><span class="cn">${c.name}</span>`;
+    el.appendChild(d);
+  });
+}
+function syncSettings(){
+  update(ref(db,`rooms/${roomId}/settings`), {
+    enabledCards: [...enabledCards],
+    foolHint: $('opt-fool-hint').checked,
+  });
+}
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+// ── CREATE / JOIN ──────────────────────────────────────────────────────────────
+window.createRoom = async function(){
+  myName = $('your-name').value.trim();
+  if(!myName){ notify('Enter your name first!','red'); return; }
+  isHost = true;
+  roomId = Math.random().toString(36).slice(2,7).toUpperCase();
+  await set(ref(db,`rooms/${roomId}`), {
+    phase:'lobby', round:1, hostId: myId,
+    settings:{ enabledCards:[...enabledCards], foolHint:true },
+    players:{ [myId]:{ id:myId, name:myName, color:COLORS[0] } },
+    assignments:{}, decoys:{}, completed:{}, votes:{}, scores:{}, ready:{},
+  });
+  listenRoom();
+  showLobby();
+};
 
-    const CARDS = [
-      { id: 'detonator', name: 'DETONATOR', emoji: '💣', obj: 'Get 3+ Demos', color: '#e03535', desc: 'Rack up demolitions. Play aggressively.' },
-      { id: 'agent', name: 'AGENT', emoji: '🤝', obj: 'Participate in 3+ goals', color: '#3d8ef0', desc: 'Touch the ball before 3+ goals. Goals and assists count.' },
-      { id: 'fool', name: 'FOOL', emoji: '🃏', obj: 'Make everyone guess wrong', color: '#9b59f5', desc: 'Act like a different role so everyone votes wrong.', isFool: true },
-      { id: 'guardian', name: 'GUARDIAN', emoji: '🛡️', obj: 'Get 3+ Saves', color: '#f5c842', desc: 'Stay in net and prioritize saves over offense.' },
-      { id: 'king', name: 'KING', emoji: '👑', obj: "Teammate can't score. Must win.", color: '#e8a020', desc: 'Solo carry. Teammate must not score AND you must win.' },
-      { id: 'mafia', name: 'MAFIA', emoji: '🎩', obj: 'Lose the game', color: '#888', desc: 'Subtly throw without being obvious.', isMafia: true },
-      { id: 'pacifist', name: 'PACIFIST', emoji: '☮️', obj: "Can't score. Must win.", color: '#2ecc80', desc: "You cannot score. Help teammates. Win via assists." },
-      { id: 'villager', name: 'VILLAGER', emoji: '🧱', obj: 'Win the game', color: '#cd7f32', desc: 'Simple: just win. Play normally.' },
-    ];
-    const COLORS = ['#3d8ef0', '#e03535', '#2ecc80', '#f5c842', '#9b59f5', '#f57c30', '#e8a020', '#30c8e8'];
+window.joinRoom = async function(){
+  myName = $('your-name').value.trim();
+  if(!myName){ notify('Enter your name first!','red'); return; }
+  const code = $('join-code').value.trim().toUpperCase();
+  if(code.length < 5){ notify('Enter the 5-letter room code','red'); return; }
+  const snap = await get(ref(db,`rooms/${code}`));
+  if(!snap.exists()){ notify('Room not found!','red'); return; }
+  roomId = code;
+  gs = snap.val();
+  isHost = (gs.hostId === myId);
+  if(gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
+  const colorIdx = Object.keys(gs.players||{}).length % COLORS.length;
+  await update(ref(db,`rooms/${roomId}/players`), {
+    [myId]:{ id:myId, name:myName, color:COLORS[colorIdx] }
+  });
+  listenRoom();
+};
 
-    let myId = 'p' + Date.now() + Math.random().toString(36).slice(2, 6);
-    let myName = '';
-    let roomId = null;
-    let gs = null;
-    let enabledCards = new Set(CARDS.map(c => c.id));
-    let myVotes = {}; // targetId → cardId (local, reset each vote phase)
+(function(){
+  const room = new URLSearchParams(location.search).get('room');
+  if(room) $('join-code').value = room;
+})();
 
-    const $ = id => document.getElementById(id);
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      $(id).classList.add('active');
-      window.scrollTo(0, 0);
+// ── LISTENER ──────────────────────────────────────────────────────────────────
+function listenRoom(){
+  onValue(ref(db,`rooms/${roomId}`), snap => {
+    if(!snap.exists()) return;
+    gs = snap.val();
+    isHost = (gs.hostId === myId);
+    if(gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
+    switch(gs.phase){
+      case 'lobby':   showLobby();    break;
+      case 'game':    renderGame();   break;
+      case 'vote':    renderVote();   break;
+      case 'results': renderResults();break;
     }
-    function notify(msg, type = 'gold') {
-      const n = document.createElement('div');
-      n.className = `notif notif-${type}`;
-      n.textContent = msg;
-      document.body.appendChild(n);
-      setTimeout(() => n.remove(), 2900);
+  });
+}
+
+// ── LOBBY ─────────────────────────────────────────────────────────────────────
+function showLobby(){
+  showScreen('lobby-screen');
+  $('lobby-code').textContent = roomId;
+  const link = location.href.split('?')[0] + '?room=' + roomId;
+  $('lobby-link').textContent = link;
+  const ps = players();
+  $('lobby-count').textContent = ps.length;
+  const list = $('lobby-players');
+  list.innerHTML = '';
+  ps.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'lobby-player';
+    const isMe = p.id === myId;
+    const isH  = p.id === gs.hostId;
+    d.innerHTML = `
+      <span class="dot" style="background:${p.color}"></span>
+      ${p.name}
+      ${isH ? '<span class="host-tag">HOST</span>' : ''}
+      ${isMe && !isH ? '<span class="you-tag">YOU</span>' : ''}
+      ${isMe && isH  ? '<span class="you-tag">YOU</span>' : ''}
+    `;
+    list.appendChild(d);
+  });
+  renderCardToggles('lobby-card-toggles');
+  if(gs.settings){ $('opt-fool-hint').checked = gs.settings.foolHint ?? true; }
+
+  // Host sees Start button; guests see a waiting message
+  const hostCtrl  = $('lobby-host-controls');
+  const guestMsg  = $('lobby-guest-msg');
+  if(isHost){
+    hostCtrl.innerHTML = `
+      <button class="btn btn-gold btn-full" id="start-btn" onclick="startGame()" ${ps.length < 2 ? 'disabled' : ''}>⚡ START GAME</button>
+      <p class="text-muted text-center" style="margin-top:10px;font-family:'Barlow Condensed';font-size:14px;">Start when everyone has joined</p>`;
+    guestMsg.innerHTML = '';
+  } else {
+    hostCtrl.innerHTML = '';
+    guestMsg.innerHTML = `<p class="text-muted text-center" style="font-family:'Barlow Condensed';font-size:17px;padding:14px 0;">⏳ Waiting for the host to start the game...</p>`;
+  }
+}
+
+window.startGame = async function(){
+  if(players().length < 2){ notify('Need 2+ players!','red'); return; }
+  await syncSettings();
+  await assignAndPush(gs.round||1);
+};
+
+async function assignAndPush(round){
+  const ps = players();
+  const enabled = [...enabledCards];
+  const assignments={}, decoys={}, completed={}, ready={};
+  const shuffled = [...enabled].sort(() => Math.random()-.5);
+  ps.forEach((p,i) => {
+    assignments[p.id] = shuffled[i % shuffled.length];
+    completed[p.id]   = false;
+    ready[p.id]       = false;
+    if(assignments[p.id]==='fool'){
+      const others = enabled.filter(c => c!=='fool');
+      decoys[p.id] = others[Math.floor(Math.random()*others.length)];
     }
-    const cardDef = id => CARDS.find(c => c.id === id);
-    const players = () => Object.values(gs?.players || {});
-    const myCard = () => gs?.assignments?.[myId];
+  });
+  await update(ref(db,`rooms/${roomId}`), {
+    phase:'game', round, assignments, decoys, completed, votes:{}, ready,
+    'settings/enabledCards': enabled,
+  });
+  // Reset our local card tracker when new cards are assigned
+  renderedCardId = null;
+}
 
-    function renderCardToggles(containerId) {
-      const el = $(containerId);
-      el.innerHTML = '';
-      CARDS.forEach(c => {
-        const d = document.createElement('div');
-        d.className = 'ctoggle' + (enabledCards.has(c.id) ? ' on' : '');
-        d.onclick = () => {
-          enabledCards.has(c.id) ? enabledCards.delete(c.id) : enabledCards.add(c.id);
-          d.classList.toggle('on');
-          if (roomId) syncSettings();
-        };
-        d.innerHTML = `<span class="ce">${c.emoji}</span><span class="cn">${c.name}</span>`;
-        el.appendChild(d);
-      });
-    }
-    function syncSettings() {
-      update(ref(db, `rooms/${roomId}/settings`), {
-        enabledCards: [...enabledCards],
-        foolHint: $('opt-fool-hint').checked,
-      });
-    }
+window.rerollCards = async function(){
+  if(!isHost){ notify('Only the host can reroll','red'); return; }
+  await assignAndPush(gs.round||1);
+  notify('Cards rerolled! 🎲');
+};
+window.backToLobby = async function(){
+  if(!isHost){ notify('Only the host can do that','red'); return; }
+  await update(ref(db,`rooms/${roomId}`),{phase:'lobby'});
+};
 
-    // ── CREATE / JOIN ──────────────────────────────────────────────────────────────
-    window.createRoom = async function () {
-      myName = $('your-name').value.trim();
-      if (!myName) { notify('Enter your name first!', 'red'); return; }
-      roomId = Math.random().toString(36).slice(2, 7).toUpperCase();
-      await set(ref(db, `rooms/${roomId}`), {
-        phase: 'lobby', round: 1,
-        settings: { enabledCards: [...enabledCards], foolHint: true },
-        players: { [myId]: { id: myId, name: myName, color: COLORS[0] } },
-        assignments: {}, decoys: {}, completed: {}, votes: {}, scores: {},
-      });
-      listenRoom();
-      showLobby();
-    };
+// ── GAME ──────────────────────────────────────────────────────────────────────
+function renderGame(){
+  showScreen('game-screen');
+  const myCardId = myCard();
+  const c = cardDef(myCardId);
 
-    window.joinRoom = async function () {
-      myName = $('your-name').value.trim();
-      if (!myName) { notify('Enter your name first!', 'red'); return; }
-      const code = $('join-code').value.trim().toUpperCase();
-      if (code.length < 5) { notify('Enter the 5-letter room code', 'red'); return; }
-      const snap = await get(ref(db, `rooms/${code}`));
-      if (!snap.exists()) { notify('Room not found!', 'red'); return; }
-      roomId = code;
-      gs = snap.val();
-      if (gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
-      const colorIdx = Object.keys(gs.players || {}).length % COLORS.length;
-      await update(ref(db, `rooms/${roomId}/players`), {
-        [myId]: { id: myId, name: myName, color: COLORS[colorIdx] }
-      });
-      listenRoom();
-    };
-
-    (function () {
-      const room = new URLSearchParams(location.search).get('room');
-      if (room) $('join-code').value = room;
-    })();
-
-    // ── LISTENER ──────────────────────────────────────────────────────────────────
-    function listenRoom() {
-      onValue(ref(db, `rooms/${roomId}`), snap => {
-        if (!snap.exists()) return;
-        gs = snap.val();
-        if (gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
-        switch (gs.phase) {
-          case 'lobby': showLobby(); break;
-          case 'game': renderGame(); break;
-          case 'vote': renderVote(); break;
-          case 'results': renderResults(); break;
-        }
-      });
-    }
-
-    // ── LOBBY ─────────────────────────────────────────────────────────────────────
-    function showLobby() {
-      showScreen('lobby-screen');
-      $('lobby-code').textContent = roomId;
-      const link = location.href.split('?')[0] + '?room=' + roomId;
-      $('lobby-link').textContent = link;
-      const ps = players();
-      $('lobby-count').textContent = ps.length;
-      const list = $('lobby-players');
-      list.innerHTML = '';
-      ps.forEach(p => {
-        const d = document.createElement('div');
-        d.className = 'lobby-player';
-        d.innerHTML = `<span class="dot" style="background:${p.color}"></span>${p.name}${p.id === myId ? '<span class="you-tag">YOU</span>' : ''}`;
-        list.appendChild(d);
-      });
-      $('start-btn').disabled = ps.length < 2;
-      renderCardToggles('lobby-card-toggles');
-      if (gs.settings) { $('opt-fool-hint').checked = gs.settings.foolHint ?? true; }
-    }
-
-    window.startGame = async function () {
-      if (players().length < 2) { notify('Need 2+ players!', 'red'); return; }
-      await syncSettings();
-      await assignAndPush(gs.round || 1);
-    };
-
-    async function assignAndPush(round) {
-      const ps = players();
-      const enabled = [...enabledCards];
-      const assignments = {}, decoys = {}, completed = {};
-      const shuffled = [...enabled].sort(() => Math.random() - .5);
-      ps.forEach((p, i) => {
-        assignments[p.id] = shuffled[i % shuffled.length];
-        completed[p.id] = false;
-        if (assignments[p.id] === 'fool') {
-          const others = enabled.filter(c => c !== 'fool');
-          decoys[p.id] = others[Math.floor(Math.random() * others.length)];
-        }
-      });
-      await update(ref(db, `rooms/${roomId}`), {
-        phase: 'game', round, assignments, decoys, completed, votes: {},
-        'settings/enabledCards': enabled,
-      });
-    }
-    window.rerollCards = async function () { await assignAndPush(gs.round || 1); notify('Cards rerolled! 🎲'); };
-    window.backToLobby = async function () { await update(ref(db, `rooms/${roomId}`), { phase: 'lobby' }); };
-
-    // ── GAME ──────────────────────────────────────────────────────────────────────
-    function renderGame() {
-      showScreen('game-screen');
-      const myCardId = myCard();
-      const c = cardDef(myCardId);
-
-      $('game-status-chips').innerHTML = `
-    <span class="chip chip-gold">Round ${gs.round || 1}</span>
+  $('game-status-chips').innerHTML = `
+    <span class="chip chip-gold">Round ${gs.round||1}</span>
     <span class="chip chip-blue"><span class="online-dot"></span>${players().length} online</span>
-    ${c ? `<span class="chip" style="background:${c.color}22;border:1px solid ${c.color}55;color:${c.color}">${c.emoji} ${c.name}</span>` : ''}
+    ${c?`<span class="chip" style="background:${c.color}22;border:1px solid ${c.color}55;color:${c.color}">${c.emoji} ${c.name}</span>`:''}
+    ${isHost ? '<span class="chip" style="background:rgba(224,53,53,.15);border:1px solid rgba(224,53,53,.35);color:#e07070">👑 HOST</span>' : ''}
   `;
 
-      const wrap = $('role-card-wrap');
-      if (!c) {
-        wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">⚙️</div><h2>WAITING FOR CARD...</h2></div></div>`;
-      } else {
-        let foolHtml = '';
-        if (c.isFool && gs.settings?.foolHint && gs.decoys?.[myId]) {
-          const dc = cardDef(gs.decoys[myId]);
-          foolHtml = `<div class="fool-hint-box">🎭 <strong>Act like: ${dc?.emoji} ${dc?.name}</strong><br>"${dc?.obj}"<br>Make everyone think you have THIS card.</div>`;
-        }
-        wrap.innerHTML = `
-      <div class="role-card" style="border-color:${c.color};box-shadow:0 0 50px ${c.color}28;">
+  // ── CARD: only re-render if our card actually changed (prevents flip bug) ──
+  const wrap = $('role-card-wrap');
+  if(!c){
+    wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">⚙️</div><h2>WAITING FOR CARD...</h2></div></div>`;
+    renderedCardId = null;
+  } else if(myCardId !== renderedCardId) {
+    // Card changed (new round or first load) — animate
+    renderedCardId = myCardId;
+    let foolHtml = '';
+    if(c.isFool && gs.settings?.foolHint && gs.decoys?.[myId]){
+      const dc = cardDef(gs.decoys[myId]);
+      foolHtml = `<div class="fool-hint-box">🎭 <strong>Act like: ${dc?.emoji} ${dc?.name}</strong><br>"${dc?.obj}"<br>Make everyone think you have THIS card.</div>`;
+    }
+    wrap.innerHTML = `
+      <div class="role-card animate-in" style="border-color:${c.color};box-shadow:0 0 50px ${c.color}28;">
         <div class="rc-name" style="color:${c.color}">${c.name}</div>
         <span class="rc-emoji">${c.emoji}</span>
         <div class="rc-obj-label">OBJECTIVE</div>
@@ -1404,296 +578,456 @@
         <div class="rc-desc">${c.desc}</div>
         ${foolHtml}
       </div>`;
-      }
+  }
+  // If myCardId === renderedCardId, we skip re-rendering the card entirely (no flip)
 
-      // Objective toggle (your own only)
-      const otWrap = $('obj-toggle-wrap');
-      if (c) {
-        const done = gs.completed?.[myId] || false;
-        otWrap.innerHTML = '';
-        const ot = document.createElement('div');
-        ot.className = 'obj-toggle' + (done ? ' done' : '');
-        ot.onclick = toggleDone;
-        ot.innerHTML = `
-      <div class="ot-check">${done ? '✓' : ''}</div>
+  // Objective toggle (only you can toggle yours)
+  const otWrap = $('obj-toggle-wrap');
+  if(c){
+    const done = gs.completed?.[myId] || false;
+    otWrap.innerHTML = '';
+    const ot = document.createElement('div');
+    ot.className = 'obj-toggle' + (done?' done':'');
+    ot.onclick = toggleDone;
+    ot.innerHTML = `
+      <div class="ot-check">${done?'✓':''}</div>
       <div>
         <div class="ot-text">${c.obj}</div>
         <div class="ot-sub">${done
-            ? '✅ Completed — you earned +4 pts (steals apply during voting)'
-            : 'Tap after your match if you completed this'}</div>
+          ? '✅ Marked complete — +4 pts before steals'
+          : 'Tap after your match if you completed this'}</div>
       </div>`;
-        otWrap.appendChild(ot);
-      } else {
-        otWrap.innerHTML = '';
-      }
+    otWrap.appendChild(ot);
+  } else {
+    otWrap.innerHTML = '';
+  }
 
-      // All players strip
-      const apList = $('all-players-list');
-      apList.innerHTML = '';
-      players().forEach(p => {
-        const done = gs.completed?.[p.id];
-        const d = document.createElement('div');
-        d.className = 'lobby-player';
-        d.innerHTML = `
+  // ── READY UP (non-host players) ──
+  const readySection = $('ready-section');
+  const ps = players();
+  const nonHostPlayers = ps.filter(p => p.id !== gs.hostId);
+  const readyMap = gs.ready || {};
+  const readyCount = nonHostPlayers.filter(p => readyMap[p.id]).length;
+  const allReady   = nonHostPlayers.length > 0 && nonHostPlayers.every(p => readyMap[p.id]);
+
+  if(!isHost){
+    readySection.style.display = '';
+    const btnWrap = $('ready-btn-wrap');
+    const iAmReady = readyMap[myId] || false;
+    btnWrap.innerHTML = iAmReady
+      ? `<button class="btn btn-outline btn-full" onclick="toggleReady()" style="border-color:var(--green);color:var(--green);">✅ READY — tap to unready</button>`
+      : `<button class="btn btn-green btn-full" onclick="toggleReady()">✋ READY UP</button>`;
+
+    // Ready tracker list
+    const rList = $('ready-player-list');
+    rList.innerHTML = '';
+    nonHostPlayers.forEach(p => {
+      const r = readyMap[p.id] || false;
+      const d = document.createElement('div');
+      d.className = 'ready-player-row';
+      d.innerHTML = `
+        <span class="dot" style="background:${p.color}"></span>
+        <span>${p.name}${p.id===myId?' (you)':''}</span>
+        <span class="ready-icon">${r ? '✅' : '⏳'}</span>`;
+      rList.appendChild(d);
+    });
+    $('ready-count-num').textContent   = readyCount;
+    $('ready-count-total').textContent = nonHostPlayers.length;
+  } else {
+    readySection.style.display = 'none';
+  }
+
+  // All players list
+  const apList = $('all-players-list');
+  apList.innerHTML = '';
+  ps.forEach(p => {
+    const done  = gs.completed?.[p.id];
+    const ready = readyMap[p.id];
+    const isH   = p.id === gs.hostId;
+    const d = document.createElement('div');
+    d.className = 'lobby-player';
+    d.innerHTML = `
       <span class="dot" style="background:${p.color}"></span>
       ${p.name}
-      ${p.id === myId ? '<span class="you-tag">YOU</span>' : ''}
-      <span style="margin-left:auto;font-family:'Barlow Condensed';font-size:14px;color:${done ? 'var(--green)' : 'var(--muted)'}">
-        ${done ? '✅ Done' : '⬜ Playing...'}
+      ${isH ? '<span class="host-tag">HOST</span>' : ''}
+      ${p.id===myId && !isH ? '<span class="you-tag">YOU</span>' : ''}
+      <span style="margin-left:auto;font-family:'Barlow Condensed';font-size:13px;color:${done?'var(--green)':'var(--muted)'}">
+        ${done?'✅':'⬜'}
       </span>
-      <span style="font-family:'Bebas Neue';font-size:16px;color:var(--gold);margin-left:8px;">
-        ${gs.scores?.[p.id] || 0}pt
-      </span>`;
-        apList.appendChild(d);
+      ${!isH ? `<span style="font-size:13px;color:${ready?'var(--green)':'var(--muted)'};">${ready?'🟢':'⏳'}</span>` : ''}
+      <span style="font-family:'Bebas Neue';font-size:16px;color:var(--gold);margin-left:4px;">${gs.scores?.[p.id]||0}pt</span>`;
+    apList.appendChild(d);
+  });
+
+  // ── HOST CONTROLS ──
+  const hostCtrl = $('game-host-controls');
+  if(isHost){
+    hostCtrl.innerHTML = `
+      <div class="host-panel">
+        <div class="host-label">👑 HOST CONTROLS</div>
+        <div class="btn-group">
+          <button class="btn btn-gold" id="go-vote-btn" onclick="goToVote()" ${allReady?'':'disabled'}>
+            📊 ${allReady ? 'Start Voting' : `Voting (${readyCount}/${nonHostPlayers.length} ready)`}
+          </button>
+          <button class="btn btn-red btn-sm" onclick="rerollCards()">🎲 Reroll</button>
+          <button class="btn btn-red btn-sm" onclick="backToLobby()">↩ Lobby</button>
+        </div>
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up before you can proceed.</p>` : ''}
+      </div>`;
+  } else {
+    hostCtrl.innerHTML = '';
+  }
+}
+
+async function toggleDone(){
+  const cur = gs.completed?.[myId] || false;
+  await update(ref(db,`rooms/${roomId}/completed`),{[myId]:!cur});
+}
+
+window.toggleReady = async function(){
+  const cur = gs.ready?.[myId] || false;
+  await update(ref(db,`rooms/${roomId}/ready`),{[myId]:!cur});
+};
+
+// ── VOTE ──────────────────────────────────────────────────────────────────────
+window.goToVote = async function(){
+  if(!isHost){ notify('Only the host can do that','red'); return; }
+  myVotes = {};
+  // Reset ready flags for vote phase
+  const readyReset = {};
+  players().forEach(p => { readyReset[p.id] = false; });
+  await update(ref(db,`rooms/${roomId}`),{phase:'vote', votes:{}, ready: readyReset});
+};
+
+function renderVote(){
+  showScreen('vote-screen');
+  const ps      = players();
+  const enabled = gs.settings?.enabledCards || [...enabledCards];
+  const targets = ps.filter(p => p.id !== myId);
+  const readyMap = gs.ready || {};
+  const nonHostPlayers = ps.filter(p => p.id !== gs.hostId);
+  const readyCount = nonHostPlayers.filter(p => readyMap[p.id]).length;
+  const allReady   = nonHostPlayers.length > 0 && nonHostPlayers.every(p => readyMap[p.id]);
+
+  $('my-vote-count').textContent = Object.keys(myVotes).length;
+  $('my-vote-total').textContent = targets.length;
+
+  // Ready-up for vote phase (non-host)
+  const voteReadySec = $('vote-ready-section');
+  if(!isHost){
+    const iAmReady = readyMap[myId] || false;
+    voteReadySec.innerHTML = `
+      <div class="ready-tracker" style="margin-bottom:0;">
+        <div class="ready-tracker-title">⏳ READY UP WHEN YOU'VE SUBMITTED ALL VOTES</div>
+        ${iAmReady
+          ? `<button class="btn btn-outline btn-full" onclick="toggleReady()" style="border-color:var(--green);color:var(--green);margin-bottom:10px;">✅ READY — tap to unready</button>`
+          : `<button class="btn btn-green btn-full" onclick="toggleReady()" style="margin-bottom:10px;">✋ READY UP</button>`}
+        <div id="vote-ready-list"></div>
+        <div class="ready-count">Ready: <span>${readyCount}</span> / <span>${nonHostPlayers.length}</span></div>
+      </div>`;
+    const vrl = document.getElementById('vote-ready-list');
+    if(vrl){
+      nonHostPlayers.forEach(p => {
+        const r = readyMap[p.id] || false;
+        const d = document.createElement('div');
+        d.className = 'ready-player-row';
+        d.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.name}</span><span class="ready-icon">${r?'✅':'⏳'}</span>`;
+        vrl.appendChild(d);
       });
     }
+  } else {
+    voteReadySec.innerHTML = '';
+  }
 
-    async function toggleDone() {
-      const cur = gs.completed?.[myId] || false;
-      await update(ref(db, `rooms/${roomId}/completed`), { [myId]: !cur });
-    }
-
-    // ── VOTE ──────────────────────────────────────────────────────────────────────
-    window.goToVote = async function () {
-      myVotes = {};
-      await update(ref(db, `rooms/${roomId}`), { phase: 'vote', votes: {} });
-    };
-
-    function renderVote() {
-      showScreen('vote-screen');
-      const ps = players();
-      const enabled = gs.settings?.enabledCards || [...enabledCards];
-      const targets = ps.filter(p => p.id !== myId);
-
-      $('my-vote-count').textContent = Object.keys(myVotes).length;
-      $('my-vote-total').textContent = targets.length;
-
-      const panels = $('vote-panels');
-      panels.innerHTML = '';
-
-      targets.forEach(target => {
-        const curVote = myVotes[target.id] || null;
-        const done = gs.completed?.[target.id] || false;
-        const sec = document.createElement('div');
-        sec.className = 'vote-target';
-        sec.innerHTML = `
+  // Vote panels
+  const panels = $('vote-panels');
+  panels.innerHTML = '';
+  targets.forEach(target => {
+    const curVote = myVotes[target.id] || null;
+    const done    = gs.completed?.[target.id] || false;
+    const sec     = document.createElement('div');
+    sec.className = 'vote-target';
+    sec.innerHTML = `
       <div class="vote-target-header">
         <span class="dot" style="background:${target.color}"></span>
         ${target.name}'s card?
       </div>
       <div class="vote-target-sub">
         ${done
-            ? '✅ They completed their goal — a correct guess <strong>steals 1 pt from them</strong> and gives you <strong>+1</strong>'
-            : '❌ They didn\'t complete their goal — a correct guess gives you <strong>+1 free</strong> (no steal)'}
+          ? '✅ They completed their goal — correct guess <strong>steals 1 pt</strong> from them (+1 to you)'
+          : '❌ They didn\'t complete — correct guess gives you <strong>+1 free</strong> (no steal)'}
       </div>`;
-        const grid = document.createElement('div');
-        grid.className = 'vote-options';
-        enabled.forEach(cid => {
-          const c = cardDef(cid); if (!c) return;
-          const btn = document.createElement('button');
-          btn.className = 'vote-btn' + (curVote === cid ? ' selected' : '');
-          btn.onclick = () => castVote(target.id, cid);
-          btn.innerHTML = `<span class="ve">${c.emoji}</span><span class="vn">${c.name}</span>`;
-          grid.appendChild(btn);
-        });
-        sec.appendChild(grid);
-        panels.appendChild(sec);
+    const grid = document.createElement('div');
+    grid.className = 'vote-options';
+    enabled.forEach(cid => {
+      const c = cardDef(cid); if(!c) return;
+      const btn = document.createElement('button');
+      btn.className = 'vote-btn' + (curVote===cid?' selected':'');
+      btn.onclick   = () => castVote(target.id, cid);
+      btn.innerHTML = `<span class="ve">${c.emoji}</span><span class="vn">${c.name}</span>`;
+      grid.appendChild(btn);
+    });
+    sec.appendChild(grid);
+    panels.appendChild(sec);
+  });
+
+  // Host controls
+  const vhc = $('vote-host-controls');
+  if(isHost){
+    vhc.innerHTML = `
+      <div class="host-panel">
+        <div class="host-label">👑 HOST CONTROLS</div>
+        <div class="btn-group">
+          <button class="btn btn-gold" onclick="revealResults()" ${allReady?'':'disabled'}>
+            🏆 ${allReady ? 'Reveal Results' : `Reveal (${readyCount}/${nonHostPlayers.length} ready)`}
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="goBackToGame()">← Back</button>
+        </div>
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up with their votes.</p>` : ''}
+      </div>`;
+  } else {
+    vhc.innerHTML = '';
+  }
+}
+
+function castVote(targetId, cardId){
+  myVotes[targetId] = cardId;
+  update(ref(db,`rooms/${roomId}/votes/${myId}`),{[targetId]:cardId});
+  $('my-vote-count').textContent = Object.keys(myVotes).length;
+  renderVote();
+}
+
+window.goBackToGame = async function(){
+  if(!isHost) return;
+  await update(ref(db,`rooms/${roomId}`),{phase:'game'});
+};
+
+// ── RESULTS & SCORING ─────────────────────────────────────────────────────────
+/*
+  RULES:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  Complete objective                    → +4 to you              │
+  │  Someone correctly guesses your card   → +1 to them (always)    │
+  │    and you completed                   → −1 from you (steal)     │
+  │  FOOL SPECIAL: if ANYONE guesses FOOL  → fool loses ALL 4 pts   │
+  │    (regardless of whether fool completed or not)                 │
+  └──────────────────────────────────────────────────────────────────┘
+*/
+window.revealResults = async function(){
+  if(!isHost){ notify('Only the host can reveal results','red'); return; }
+  const ps          = players();
+  const assignments = gs.assignments || {};
+  const completed   = gs.completed   || {};
+  const allVotes    = gs.votes       || {};
+  const scores      = {};
+  ps.forEach(p => { scores[p.id] = gs.scores?.[p.id] || 0; });
+
+  // Step 1: objective +4
+  ps.forEach(p => { if(completed[p.id]) scores[p.id] += 4; });
+
+  // Step 2: tally correct guesses per target
+  const correctGuessersOf = {};
+  ps.forEach(p => { correctGuessersOf[p.id] = []; });
+
+  Object.entries(allVotes).forEach(([voterId, voterGuesses]) => {
+    Object.entries(voterGuesses).forEach(([targetId, guessedCard]) => {
+      if(guessedCard === assignments[targetId]){
+        correctGuessersOf[targetId].push(voterId);
+      }
+    });
+  });
+
+  // Step 3: apply scoring
+  const roundGainFromGuessing = {};
+  const roundStolenFromMe     = {};
+  const foolCaught            = {}; // targetId → bool
+  ps.forEach(p => { roundGainFromGuessing[p.id]=0; roundStolenFromMe[p.id]=0; foolCaught[p.id]=false; });
+
+  ps.forEach(target => {
+    const guessers   = correctGuessersOf[target.id];
+    const targetDone = completed[target.id];
+    const isFoolCard = assignments[target.id] === 'fool';
+
+    if(isFoolCard && guessers.length > 0){
+      // Fool was caught — lose ALL 4 objective points
+      foolCaught[target.id] = true;
+      scores[target.id] -= 4; // reverse the +4 given in step 1 (if they completed), or just subtract 4 regardless
+      // Actually: fool loses 4 pts total from their current running score this round
+      // The +4 was already added if they "completed"; now we wipe it by subtracting 4
+      // If they didn't complete, score was 0 from objective, subtract 4 → goes negative (harsh but fair)
+      // Per the rule: "lose all of their 4 points" — interpreted as lose 4 from total
+      roundStolenFromMe[target.id] = 4;
+      // Each correct guesser still gets their +1
+      guessers.forEach(voterId => {
+        roundGainFromGuessing[voterId] = (roundGainFromGuessing[voterId]||0) + 1;
+        scores[voterId] += 1;
       });
-    }
-
-    function castVote(targetId, cardId) {
-      myVotes[targetId] = cardId;
-      update(ref(db, `rooms/${roomId}/votes/${myId}`), { [targetId]: cardId });
-      $('my-vote-count').textContent = Object.keys(myVotes).length;
-      renderVote();
-    }
-
-    // ── RESULTS & SCORING ─────────────────────────────────────────────────────────
-    /*
-      RULES:
-      ┌─────────────────────────────────────────────────────────────┐
-      │  Complete your objective           → +4 to you             │
-      │  Someone correctly guesses you     →                        │
-      │    • +1 to them (always)                                    │
-      │    • −1 from you (ONLY if you completed)                    │
-      └─────────────────────────────────────────────────────────────┘
-    */
-    window.revealResults = async function () {
-      const ps = players();
-      const assignments = gs.assignments || {};
-      const completed = gs.completed || {};
-      const allVotes = gs.votes || {};
-      const scores = {};
-
-      // start from existing cumulative scores
-      ps.forEach(p => { scores[p.id] = gs.scores?.[p.id] || 0; });
-
-      // Step 1: objective +4
-      ps.forEach(p => { if (completed[p.id]) scores[p.id] += 4; });
-
-      // Step 2: resolve every individual vote
-      // correctGuessersOf[targetId] = [voterId, ...] who guessed correctly
-      const correctGuessersOf = {};
-      ps.forEach(p => { correctGuessersOf[p.id] = []; });
-
-      Object.entries(allVotes).forEach(([voterId, voterGuesses]) => {
-        Object.entries(voterGuesses).forEach(([targetId, guessedCard]) => {
-          if (guessedCard === assignments[targetId]) {
-            correctGuessersOf[targetId].push(voterId);
-          }
-        });
-      });
-
-      // Apply steal logic
-      const roundGainFromGuessing = {}; // voterId → pts earned by guessing correctly
-      const roundStolenFromMe = {}; // targetId → pts lost
-      ps.forEach(p => { roundGainFromGuessing[p.id] = 0; roundStolenFromMe[p.id] = 0; });
-
-      ps.forEach(target => {
-        const guessers = correctGuessersOf[target.id];
-        const targetDone = completed[target.id];
-        guessers.forEach(voterId => {
-          // guesser always gets +1
-          roundGainFromGuessing[voterId] = (roundGainFromGuessing[voterId] || 0) + 1;
-          scores[voterId] += 1;
-          // steal from target only if they completed
-          if (targetDone) {
-            scores[target.id] -= 1;
-            roundStolenFromMe[target.id] = (roundStolenFromMe[target.id] || 0) + 1;
-          }
-        });
-      });
-
-      // Build per-player breakdown for display
-      const breakdown = {};
-      ps.forEach(p => {
-        breakdown[p.id] = {
-          objPts: completed[p.id] ? 4 : 0,
-          stolenFromMe: roundStolenFromMe[p.id] || 0,
-          gainFromGuessing: roundGainFromGuessing[p.id] || 0,
-          correctGuessers: correctGuessersOf[p.id],
-        };
-      });
-
-      await update(ref(db, `rooms/${roomId}`), {
-        phase: 'results', scores, breakdown, correctGuessersOf,
-      });
-    };
-
-    function renderResults() {
-      showScreen('results-screen');
-      const ps = players();
-      const assignments = gs.assignments || {};
-      const completed = gs.completed || {};
-      const scores = gs.scores || {};
-      const breakdown = gs.breakdown || {};
-      const cgOf = gs.correctGuessersOf || {};
-
-      // Fool reveal
-      const foolEl = $('fool-reveals');
-      foolEl.innerHTML = '';
-      ps.forEach(p => {
-        if (assignments[p.id] === 'fool' && gs.decoys?.[p.id]) {
-          const dc = cardDef(gs.decoys[p.id]);
-          const d = document.createElement('div');
-          d.className = 'fool-reveal';
-          d.innerHTML = `🃏 <strong>${p.name}</strong> was the FOOL — they were secretly acting as ${dc?.emoji} <strong>${dc?.name}</strong>!`;
-          foolEl.appendChild(d);
+    } else {
+      // Normal card steal logic
+      guessers.forEach(voterId => {
+        roundGainFromGuessing[voterId] = (roundGainFromGuessing[voterId]||0) + 1;
+        scores[voterId] += 1;
+        if(targetDone){
+          scores[target.id]           -= 1;
+          roundStolenFromMe[target.id] = (roundStolenFromMe[target.id]||0) + 1;
         }
       });
+    }
+  });
 
-      // Per-player breakdown
-      const list = $('results-list');
-      list.innerHTML = '';
-      ps.forEach((p, i) => {
-        const c = cardDef(assignments[p.id]);
-        const bd = breakdown[p.id] || {};
-        const done = completed[p.id];
-        const pts = scores[p.id] || 0;
+  // Apply guesser gains
+  ps.forEach(p => { scores[p.id] = (scores[p.id]||0) + 0; }); // already applied inline
 
-        // Names of people who guessed this player correctly
-        const guesserNames = (cgOf[p.id] || []).map(gid => {
-          const gp = ps.find(x => x.id === gid);
-          return gp ? gp.name : '?';
-        });
+  const breakdown = {};
+  ps.forEach(p => {
+    breakdown[p.id] = {
+      objPts:           completed[p.id] ? 4 : 0,
+      stolenFromMe:     roundStolenFromMe[p.id]     || 0,
+      gainFromGuessing: roundGainFromGuessing[p.id] || 0,
+      foolCaught:       foolCaught[p.id]            || false,
+    };
+  });
 
-        // Round delta for this player
-        const roundDelta = bd.objPts - bd.stolenFromMe + bd.gainFromGuessing;
-        const deltaColor = roundDelta > 0 ? 'var(--green)' : roundDelta < 0 ? 'var(--red)' : 'var(--muted)';
-        const deltaStr = (roundDelta >= 0 ? '+' : '') + roundDelta;
+  await update(ref(db,`rooms/${roomId}`),{
+    phase:'results', scores, breakdown, correctGuessersOf,
+  });
+};
 
-        const d = document.createElement('div');
-        d.className = 'result-item';
-        d.style.animationDelay = (i * .08) + 's';
-        d.innerHTML = `
+function renderResults(){
+  showScreen('results-screen');
+  const ps          = players();
+  const assignments = gs.assignments       || {};
+  const completed   = gs.completed         || {};
+  const scores      = gs.scores            || {};
+  const breakdown   = gs.breakdown         || {};
+  const cgOf        = gs.correctGuessersOf || {};
+
+  // Fool reveals
+  const foolEl = $('fool-reveals');
+  foolEl.innerHTML = '';
+  ps.forEach(p => {
+    if(assignments[p.id]==='fool' && gs.decoys?.[p.id]){
+      const dc = cardDef(gs.decoys[p.id]);
+      const caught = breakdown[p.id]?.foolCaught;
+      const d = document.createElement('div');
+      d.className = 'fool-reveal';
+      d.innerHTML = caught
+        ? `🃏 <strong>${p.name}</strong> was the FOOL (acting as ${dc?.emoji} ${dc?.name}) — <strong style="color:#e07070">they were caught and lost 4 pts!</strong>`
+        : `🃏 <strong>${p.name}</strong> was the FOOL — they were secretly acting as ${dc?.emoji} <strong>${dc?.name}</strong>! Nobody guessed them. 🎉`;
+      foolEl.appendChild(d);
+    }
+  });
+
+  const list = $('results-list');
+  list.innerHTML = '';
+  ps.forEach((p,i) => {
+    const c    = cardDef(assignments[p.id]);
+    const bd   = breakdown[p.id] || {};
+    const done = completed[p.id];
+    const pts  = scores[p.id] || 0;
+    const guesserNames = (cgOf[p.id] || []).map(gid => {
+      const gp = ps.find(x => x.id === gid);
+      return gp ? gp.name : '?';
+    });
+    const roundDelta = bd.objPts - bd.stolenFromMe + bd.gainFromGuessing;
+    const deltaColor = roundDelta > 0 ? 'var(--green)' : roundDelta < 0 ? 'var(--red)' : 'var(--muted)';
+    const deltaStr   = (roundDelta >= 0 ? '+' : '') + roundDelta;
+
+    const d = document.createElement('div');
+    d.className = 'result-item';
+    d.style.animationDelay = (i*.08)+'s';
+
+    // Build steal/caught line
+    let stealLine = '';
+    if(bd.foolCaught){
+      stealLine = `<div class="bd-row">
+        <span class="bd-label">Caught as FOOL by: ${guesserNames.join(', ')}</span>
+        <span class="bd-val bd-neg">−4 pts wiped</span>
+      </div>`;
+    } else if(guesserNames.length > 0){
+      stealLine = `<div class="bd-row">
+        <span class="bd-label">Guessed correctly by: ${guesserNames.join(', ')}</span>
+        <span class="bd-val ${bd.stolenFromMe > 0 ? 'bd-neg':'bd-neu'}">${bd.stolenFromMe > 0 ? `−${bd.stolenFromMe} stolen` : done ? 'no steals' : 'no penalty'}</span>
+      </div>`;
+    } else {
+      stealLine = `<div class="bd-row">
+        <span class="bd-label">Nobody guessed your card</span>
+        <span class="bd-val bd-neu">safe</span>
+      </div>`;
+    }
+
+    d.innerHTML = `
       <div class="result-top">
         <span class="dot" style="background:${p.color}"></span>
-        <span class="ri-name">${p.name}${p.id === myId ? ' <span style="font-size:11px;color:var(--gold)">(YOU)</span>' : ''}</span>
-        <span class="ri-card" style="color:${c?.color || '#888'};border-color:${c?.color || '#888'}">${c?.emoji} ${c?.name}</span>
+        <span class="ri-name">${p.name}${p.id===myId?' <span style="font-size:11px;color:var(--gold)">(YOU)</span>':''}</span>
+        <span class="ri-card" style="color:${c?.color||'#888'};border-color:${c?.color||'#888'}">${c?.emoji} ${c?.name}</span>
         <span class="ri-delta" style="color:${deltaColor}">${deltaStr}pt</span>
       </div>
       <div class="result-breakdown">
         <div class="bd-row">
           <span class="bd-label">Objective: <em>${c?.obj}</em></span>
-          <span class="bd-val ${done ? 'bd-pos' : 'bd-neg'}">${done ? '+4 ✅' : '0 ❌'}</span>
+          <span class="bd-val ${done?'bd-pos':'bd-neg'}">${done?'+4 ✅':'0 ❌'}</span>
         </div>
-        <div class="bd-row">
-          <span class="bd-label">
-            ${guesserNames.length > 0
-            ? `Guessed correctly by: ${guesserNames.join(', ')}`
-            : 'Nobody guessed your card'}
-          </span>
-          <span class="bd-val ${bd.stolenFromMe > 0 ? 'bd-neg' : 'bd-neu'}">
-            ${bd.stolenFromMe > 0
-            ? `−${bd.stolenFromMe} stolen`
-            : done ? 'no steals' : 'no penalty'}
-          </span>
-        </div>
+        ${stealLine}
         <div class="bd-row">
           <span class="bd-label">Your correct guesses this round</span>
-          <span class="bd-val ${bd.gainFromGuessing > 0 ? 'bd-pos' : 'bd-neu'}">
-            ${bd.gainFromGuessing > 0 ? '+' + bd.gainFromGuessing : '0'}
-          </span>
+          <span class="bd-val ${bd.gainFromGuessing > 0 ? 'bd-pos':'bd-neu'}">${bd.gainFromGuessing > 0 ? '+'+bd.gainFromGuessing : '0'}</span>
         </div>
         <div class="bd-row">
           <span class="bd-label" style="color:var(--text);font-weight:700;">Total score</span>
           <span class="bd-val bd-gold" style="font-size:18px;">${pts}pt</span>
         </div>
       </div>`;
-        list.appendChild(d);
-      });
+    list.appendChild(d);
+  });
 
-      // Scoreboard
-      const sorted = [...ps].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
-      const maxScore = Math.max(...sorted.map(p => scores[p.id] || 0), 1);
-      const sb = $('scoreboard');
-      sb.innerHTML = '';
-      sorted.forEach((p, i) => {
-        const pts = scores[p.id] || 0;
-        const medal = ['🥇', '🥈', '🥉'][i] || `#${i + 1}`;
-        const d = document.createElement('div');
-        d.className = 'sb-row';
-        d.innerHTML = `
+  // Scoreboard
+  const sorted   = [...ps].sort((a,b) => (scores[b.id]||0)-(scores[a.id]||0));
+  const maxScore = Math.max(...sorted.map(p => scores[p.id]||0), 1);
+  const sb = $('scoreboard');
+  sb.innerHTML = '';
+  sorted.forEach((p,i) => {
+    const pts   = scores[p.id]||0;
+    const medal = ['🥇','🥈','🥉'][i] || `#${i+1}`;
+    const d     = document.createElement('div');
+    d.className = 'sb-row';
+    d.innerHTML = `
       <span class="sb-rank">${medal}</span>
       <span class="dot" style="background:${p.color}"></span>
-      <span class="sb-name">${p.name}${p.id === myId ? ' ★' : ''}</span>
-      <div class="sb-bar-wrap"><div class="sb-bar" style="width:${Math.max(4, (pts / maxScore) * 100)}%"></div></div>
+      <span class="sb-name">${p.name}${p.id===myId?' ★':''}</span>
+      <div class="sb-bar-wrap"><div class="sb-bar" style="width:${Math.max(4,(pts/maxScore)*100)}%"></div></div>
       <span class="sb-pts">${pts}</span>`;
-        sb.appendChild(d);
-      });
-    }
+    sb.appendChild(d);
+  });
 
-    window.nextRound = async function () {
-      myVotes = {};
-      await assignAndPush((gs.round || 1) + 1);
-    };
+  // Host controls on results
+  const rhc  = $('results-host-controls');
+  const rgm  = $('results-guest-msg');
+  if(isHost){
+    rhc.innerHTML = `
+      <div class="btn-group">
+        <button class="btn btn-gold" style="flex:2;font-size:22px;padding:14px;" onclick="nextRound()">▶ NEXT ROUND</button>
+        <button class="btn btn-outline" onclick="backToLobby()">↩ LOBBY</button>
+      </div>`;
+    rgm.innerHTML = '';
+  } else {
+    rhc.innerHTML = '';
+    rgm.innerHTML = `<p class="text-muted text-center" style="font-family:'Barlow Condensed';font-size:17px;padding:14px 0;">⏳ Waiting for the host to start next round...</p>`;
+  }
+}
 
-    window.showScreen = showScreen;
-    window.syncSettings = syncSettings;
+window.nextRound = async function(){
+  if(!isHost){ notify('Only the host can do that','red'); return; }
+  myVotes = {};
+  renderedCardId = null;
+  await assignAndPush((gs.round||1)+1);
+};
 
-    renderCardToggles('lobby-card-toggles');
-    $('opt-fool-hint').addEventListener('change', () => { if (roomId) syncSettings(); });
-  </script>
+window.showScreen   = showScreen;
+window.syncSettings = syncSettings;
+
+renderCardToggles('lobby-card-toggles');
+$('opt-fool-hint').addEventListener('change', () => { if(roomId) syncSettings(); });
+</script>
 </body>
-
 </html>
