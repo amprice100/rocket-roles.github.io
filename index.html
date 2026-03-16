@@ -391,10 +391,11 @@ let roomId       = null;
 let gs           = null;
 let isHost       = false;
 let enabledCards = new Set(CARDS.map(c => c.id));
-let myVotes      = {};
-let renderedCardId  = null;
+let myVotes        = {};
+let renderedCardId  = null; // card ID currently shown in the UI
+let cardAssignedId  = null; // card ID from last assignAndPush — set before the Firebase write
 let currentScreenId = null;
-let voteTimerInterval = null; // local interval for vote countdown
+let voteTimerInterval = null;
 
 const $       = id => document.getElementById(id);
 const cardDef = id => CARDS.find(c => c.id === id);
@@ -508,9 +509,10 @@ function listenRoom(){
         showLobby();
         break;
       case 'game':
-        // Only do a full render (with animation) if our card genuinely changed.
-        // Guard: if myCard() is undefined (transient), don't treat it as a new card.
-        if(currentScreenId !== 'game-screen' || (myCard() && myCard() !== renderedCardId)){
+        // Use cardAssignedId (set before the Firebase write) as the animation trigger.
+        // This never changes mid-round from other clients' actions.
+        // renderedCardId tracks what's actually showing in the UI.
+        if(currentScreenId !== 'game-screen' || renderedCardId !== cardAssignedId){
           renderGame();
         } else {
           updateGame();
@@ -609,11 +611,10 @@ async function assignAndPush(round){
       decoys[p.id] = others[Math.floor(Math.random()*others.length)];
     }
   });
-  // Null renderedCardId BEFORE the push so that when our own listener fires
-  // from this write, it sees null and correctly runs renderGame() with the animation.
-  // All subsequent writes (checkbox, ready button) will find renderedCardId === myCardId
-  // and take the updateGame() path — no animation.
-  renderedCardId = null;
+  // Record what card THIS client is about to receive, BEFORE the write.
+  // This is the ground truth — the animation should only play when this changes.
+  cardAssignedId = assignments[myId];
+  renderedCardId = null; // null so renderGame triggers animation for the new card
   await update(ref(db,`rooms/${roomId}`), {
     phase:'game', round, assignments, decoys, completed, votes:{}, ready,
     'settings/enabledCards': enabled,
@@ -698,6 +699,8 @@ function renderGame(){
     wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">⚙️</div><h2>WAITING FOR CARD...</h2></div></div>`;
     renderedCardId = null;
   } else if(myCardId !== renderedCardId) {
+    // Lock in cardAssignedId now — prevents any future Firebase event from re-triggering
+    cardAssignedId = myCardId;
     renderedCardId = myCardId;
 
     wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">🎴</div><h2>DEALING...</h2></div></div>`;
@@ -1352,6 +1355,7 @@ window.nextRound = async function(){
   if(!isHost){ notify('Only the host can do that','red'); return; }
   myVotes = {};
   renderedCardId = null;
+  cardAssignedId = null;
   await assignAndPush((gs.round||1)+1);
 };
 
