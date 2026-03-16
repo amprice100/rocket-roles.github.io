@@ -504,8 +504,13 @@ function listenRoom(){
         showLobby();
         break;
       case 'game':
-        if(currentScreenId !== 'game-screen') renderGame();
-        else updateGame(); // already on game screen — just refresh dynamic parts, no scroll
+        // Full render (with deal animation) only when we have a new card to show.
+        // For all other in-round updates (ready clicks, checkbox, etc.) use updateGame.
+        if(currentScreenId !== 'game-screen' || myCard() !== renderedCardId){
+          renderGame();
+        } else {
+          updateGame();
+        }
         break;
       case 'vote':
         if(currentScreenId !== 'vote-screen') renderVote();
@@ -605,9 +610,11 @@ async function assignAndPush(round){
     'settings/enabledCards': enabled,
   });
   // Reset our local card tracker when new cards are assigned
-  renderedCardId  = null;
-  currentScreenId = null;
-  cardRevealed    = false;
+  renderedCardId = null;
+  cardRevealed   = false;
+  // Do NOT reset currentScreenId here — that causes the animation to re-trigger
+  // on every Firebase update while already on the game screen.
+  // currentScreenId resets naturally when the phase changes to a different screen.
 }
 
 // ── CARD DEAL ANIMATION ───────────────────────────────────────────────────────
