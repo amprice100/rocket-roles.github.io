@@ -308,7 +308,7 @@ label.checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
   <div id="vote-screen" class="screen">
     <div class="panel-title" style="margin-bottom:6px;">📊 Guess Everyone's Role</div>
     <p style="font-family:'Barlow Condensed';font-size:16px;color:var(--muted);margin-bottom:16px;line-height:1.5;">
-      Correct guess = <strong style="color:var(--green)">+1 pt for you</strong> and <strong style="color:var(--green)">steals 1 pt</strong> from them if they completed their goal. Guess the <strong style="color:#c8a0ff">Fool</strong> correctly? They lose all 4 pts.
+      Correct guess = <strong style="color:var(--green)">+1 pt for you</strong>. Guess the <strong style="color:#c8a0ff">Fool</strong> correctly? They lose all 4 pts.
     </p>
 
     <!-- Ready-up for vote phase -->
@@ -388,9 +388,9 @@ let gs           = null;
 let isHost       = false;
 let enabledCards = new Set(CARDS.map(c => c.id));
 let myVotes      = {};
-// Track the last card ID we rendered so we don't re-animate on unrelated updates
 let renderedCardId  = null;
 let currentScreenId = null;
+let cardRevealed    = false; // tracks whether player has clicked to reveal their card
 
 const $       = id => document.getElementById(id);
 const cardDef = id => CARDS.find(c => c.id === id);
@@ -496,11 +496,24 @@ function listenRoom(){
     gs = snap.val();
     isHost = (gs.hostId === myId);
     if(gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
-    switch(gs.phase){
-      case 'lobby':   showLobby();    break;
-      case 'game':    renderGame();   break;
-      case 'vote':    renderVote();   break;
-      case 'results': renderResults();break;
+    const phase = gs.phase;
+    // Only call showScreen (which scrolls) when the phase actually changes
+    // For in-phase updates, call update-only functions that don't touch scroll
+    switch(phase){
+      case 'lobby':
+        showLobby();
+        break;
+      case 'game':
+        if(currentScreenId !== 'game-screen') renderGame();
+        else updateGame(); // already on game screen — just refresh dynamic parts, no scroll
+        break;
+      case 'vote':
+        if(currentScreenId !== 'vote-screen') renderVote();
+        else updateVote();
+        break;
+      case 'results':
+        renderResults();
+        break;
     }
   });
 }
@@ -593,7 +606,8 @@ async function assignAndPush(round){
   });
   // Reset our local card tracker when new cards are assigned
   renderedCardId  = null;
-  currentScreenId = null; // force screen re-show so game screen activates fresh
+  currentScreenId = null;
+  cardRevealed    = false;
 }
 
 // ── CARD DEAL ANIMATION ───────────────────────────────────────────────────────
@@ -667,44 +681,53 @@ function renderGame(){
     ${isHost ? '<span class="chip" style="background:rgba(224,53,53,.15);border:1px solid rgba(224,53,53,.35);color:#e07070">👑 HOST</span>' : ''}
   `;
 
-  // ── CARD: only re-render if our card actually changed (prevents flip bug) ──
+  // ── CARD: only re-render if our card actually changed ──
   const wrap = $('role-card-wrap');
   if(!c){
     wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">⚙️</div><h2>WAITING FOR CARD...</h2></div></div>`;
     renderedCardId = null;
+    cardRevealed   = false;
   } else if(myCardId !== renderedCardId) {
-    // Card changed (new round or first load) — show deal animation first, then flip in
-    const newCardId = myCardId;
-    renderedCardId = newCardId; // set immediately to prevent re-triggering
+    renderedCardId = myCardId;
+    cardRevealed   = false; // new card — must click to reveal again
 
-    // Show a placeholder while animating
+    // Show deal animation, then show the click-to-reveal button
     wrap.innerHTML = `<div class="role-card"><div class="waiting-card"><div class="spin">🎴</div><h2>DEALING...</h2></div></div>`;
 
-    runDealAnimation(newCardId, () => {
-      // After animation completes, render the real card with flip
-      let foolHtml = '';
-      if(c.isFool && gs.settings?.foolHint && gs.decoys?.[myId]){
-        const dc = cardDef(gs.decoys[myId]);
-        foolHtml = `<div class="fool-hint-box">🎭 <strong>Act like: ${dc?.emoji} ${dc?.name}</strong><br>"${dc?.obj}"<br>Make everyone think you have THIS card.</div>`;
-      }
+    runDealAnimation(myCardId, () => {
+      // After animation, show a face-down "tap to reveal" card
       wrap.innerHTML = `
-        <div class="role-card animate-in" style="border-color:${c.color};box-shadow:0 0 50px ${c.color}28;">
-          <div class="rc-name" style="color:${c.color}">${c.name}</div>
-          <span class="rc-emoji">${c.emoji}</span>
-          <div class="rc-obj-label">OBJECTIVE</div>
-          <div class="rc-obj">${c.obj}</div>
-          <div class="rc-desc">${c.desc}</div>
-          ${foolHtml}
+        <div class="role-card" style="cursor:pointer;border-color:var(--card-border);" onclick="revealCard()" id="hidden-card">
+          <div style="padding:20px 0;position:relative;">
+            <div style="font-size:72px;margin-bottom:16px;filter:blur(6px) opacity(0.4);">🃏</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;">YOUR ROLE</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;color:var(--muted);line-height:1.4;">Tap to reveal<br><em>make sure nobody's watching</em></div>
+            <div style="margin-top:18px;">
+              <span class="btn btn-gold" style="font-size:16px;padding:10px 24px;">👁 REVEAL MY CARD</span>
+            </div>
+          </div>
         </div>`;
     });
   }
-  // If myCardId === renderedCardId, we skip re-rendering the card entirely (no flip)
+  // If card is same and already revealed, do nothing (no flip, no scroll)
 
-  // Objective toggle — hidden for Fool (they don't know if they fooled everyone until after voting)
+  // ── OBJECTIVE TOGGLE — only show after card is revealed, hidden entirely for Fool ──
   const otWrap   = $('obj-toggle-wrap');
   const objNote  = $('obj-note');
   const objLabel = $('obj-section-label');
-  if(c && !c.isFool){
+
+  if(!c || !cardRevealed){
+    // Card not yet revealed — hide everything below card
+    if(objNote)  objNote.style.display  = 'none';
+    if(objLabel) objLabel.style.display = 'none';
+    otWrap.innerHTML = '';
+  } else if(c.isFool){
+    // Fool — show section but NO checkbox, just a note
+    if(objLabel) objLabel.style.display = '';
+    if(objNote)  objNote.style.display  = 'none';
+    otWrap.innerHTML = `<div class="obj-note" style="color:rgba(200,180,255,.8);border-left-color:rgba(155,89,245,.5);display:block;">🃏 <strong style="color:#c8a0ff">You're the Fool.</strong> No need to check anything — you'll find out if you succeeded once everyone's votes are revealed.</div>`;
+  } else {
+    // Normal card — show objective checkbox
     if(objNote)  objNote.style.display  = '';
     if(objLabel) objLabel.style.display = '';
     const done = gs.completed?.[myId] || false;
@@ -716,18 +739,9 @@ function renderGame(){
       <div class="ot-check">${done?'✓':''}</div>
       <div>
         <div class="ot-text">${c.obj}</div>
-        <div class="ot-sub">${done
-          ? '✅ Marked complete — +4 pts before steals'
-          : 'Tap after your match if you completed this'}</div>
+        <div class="ot-sub">${done ? '✅ Marked complete — +4 pts before steals' : 'Tap after your match if you completed this'}</div>
       </div>`;
     otWrap.appendChild(ot);
-  } else {
-    // Fool: hide the whole section
-    if(objNote)  objNote.style.display  = 'none';
-    if(objLabel) objLabel.style.display = 'none';
-    otWrap.innerHTML = c?.isFool
-      ? `<div class="obj-note" style="color:rgba(200,180,255,.8);border-left-color:rgba(155,89,245,.5);">🃏 <strong style="color:#c8a0ff">You're the Fool.</strong> You'll find out if you succeeded after everyone votes. Your objective is automatically tracked at results time.</div>`
-      : '';
   }
 
   // ── READY UP (non-host players) ──
@@ -807,9 +821,208 @@ function renderGame(){
   }
 }
 
+window.revealCard = function(){
+  cardRevealed = true;
+  const myCardId = myCard();
+  const c = cardDef(myCardId);
+  if(!c) return;
+
+  const wrap = $('role-card-wrap');
+  let foolHtml = '';
+  if(c.isFool && gs.settings?.foolHint && gs.decoys?.[myId]){
+    const dc = cardDef(gs.decoys[myId]);
+    foolHtml = `<div class="fool-hint-box">🎭 <strong>Act like: ${dc?.emoji} ${dc?.name}</strong><br>"${dc?.obj}"<br>Make everyone think you have THIS card.</div>`;
+  }
+  wrap.innerHTML = `
+    <div class="role-card animate-in" style="border-color:${c.color};box-shadow:0 0 50px ${c.color}28;">
+      <div class="rc-name" style="color:${c.color}">${c.name}</div>
+      <span class="rc-emoji">${c.emoji}</span>
+      <div class="rc-obj-label">OBJECTIVE</div>
+      <div class="rc-obj">${c.obj}</div>
+      <div class="rc-desc">${c.desc}</div>
+      ${foolHtml}
+    </div>`;
+
+  const objNote  = $('obj-note');
+  const objLabel = $('obj-section-label');
+  const otWrap   = $('obj-toggle-wrap');
+  if(c.isFool){
+    if(objLabel) objLabel.style.display = '';
+    if(objNote)  objNote.style.display  = 'none';
+    otWrap.innerHTML = `<div class="obj-note" style="color:rgba(200,180,255,.8);border-left-color:rgba(155,89,245,.5);display:block;">🃏 <strong style="color:#c8a0ff">You're the Fool.</strong> No need to check anything — you'll find out if you succeeded once everyone votes.</div>`;
+  } else {
+    if(objNote)  objNote.style.display  = '';
+    if(objLabel) objLabel.style.display = '';
+    const done = gs.completed?.[myId] || false;
+    otWrap.innerHTML = '';
+    const ot = document.createElement('div');
+    ot.className = 'obj-toggle' + (done?' done':'');
+    ot.onclick = toggleDone;
+    ot.innerHTML = `
+      <div class="ot-check">${done?'✓':''}</div>
+      <div>
+        <div class="ot-text">${c.obj}</div>
+        <div class="ot-sub">${done ? '✅ Marked complete — +4 pts before steals' : 'Tap after your match if you completed this'}</div>
+      </div>`;
+    otWrap.appendChild(ot);
+  }
+};
+
 async function toggleDone(){
   const cur = gs.completed?.[myId] || false;
   await update(ref(db,`rooms/${roomId}/completed`),{[myId]:!cur});
+}
+
+// Lightweight in-place update for game screen — no showScreen, no scroll
+function updateGame(){
+  const ps = players();
+  const readyMap = gs.ready || {};
+  const nonHostPlayers = ps.filter(p => p.id !== gs.hostId);
+  const readyCount = nonHostPlayers.filter(p => readyMap[p.id]).length;
+  const allReady   = nonHostPlayers.length > 0 && nonHostPlayers.every(p => readyMap[p.id]);
+  const myCardId   = myCard();
+  const c          = cardDef(myCardId);
+
+  // Update status chips
+  const chips = $('game-status-chips');
+  if(chips) chips.innerHTML = `
+    <span class="chip chip-gold">Round ${gs.round||1}</span>
+    <span class="chip chip-blue"><span class="online-dot"></span>${ps.length} online</span>
+    ${c?`<span class="chip" style="background:${c.color}22;border:1px solid ${c.color}55;color:${c.color}">${c.emoji} ${c.name}</span>`:''}
+    ${isHost ? '<span class="chip" style="background:rgba(224,53,53,.15);border:1px solid rgba(224,53,53,.35);color:#e07070">👑 HOST</span>' : ''}
+  `;
+
+  // Update objective toggle state (only if already revealed)
+  if(c && !c.isFool && cardRevealed){
+    const otWrap = $('obj-toggle-wrap');
+    const done = gs.completed?.[myId] || false;
+    if(otWrap && otWrap.innerHTML !== ''){
+      const existing = otWrap.querySelector('.obj-toggle');
+      if(existing){
+        existing.className = 'obj-toggle' + (done?' done':'');
+        existing.querySelector('.ot-check').textContent = done ? '✓' : '';
+        existing.querySelector('.ot-sub').textContent = done
+          ? '✅ Marked complete — +4 pts before steals'
+          : 'Tap after your match if you completed this';
+      }
+    }
+  }
+
+  // Update ready section (non-host)
+  if(!isHost){
+    const iAmReady = readyMap[myId] || false;
+    const btnWrap = $('ready-btn-wrap');
+    if(btnWrap) btnWrap.innerHTML = iAmReady
+      ? `<button class="btn btn-outline btn-full" onclick="toggleReady()" style="border-color:var(--green);color:var(--green);">✅ READY — tap to unready</button>`
+      : `<button class="btn btn-green btn-full" onclick="toggleReady()">✋ READY UP</button>`;
+    const rList = $('ready-player-list');
+    if(rList){
+      rList.innerHTML = '';
+      nonHostPlayers.forEach(p => {
+        const r = readyMap[p.id] || false;
+        const d = document.createElement('div');
+        d.className = 'ready-player-row';
+        d.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.name}${p.id===myId?' (you)':''}</span><span class="ready-icon">${r?'✅':'⏳'}</span>`;
+        rList.appendChild(d);
+      });
+    }
+    const rnum = $('ready-count-num');   if(rnum)   rnum.textContent   = readyCount;
+    const rtot = $('ready-count-total'); if(rtot)   rtot.textContent   = nonHostPlayers.length;
+  }
+
+  // Update all players list
+  const apList = $('all-players-list');
+  if(apList){
+    apList.innerHTML = '';
+    ps.forEach(p => {
+      const done  = gs.completed?.[p.id];
+      const ready = readyMap[p.id];
+      const isH   = p.id === gs.hostId;
+      const d = document.createElement('div');
+      d.className = 'lobby-player';
+      d.innerHTML = `
+        <span class="dot" style="background:${p.color}"></span>
+        ${p.name}
+        ${isH ? '<span class="host-tag">HOST</span>' : ''}
+        ${p.id===myId && !isH ? '<span class="you-tag">YOU</span>' : ''}
+        <span style="margin-left:auto;font-family:'Barlow Condensed';font-size:13px;color:${done?'var(--green)':'var(--muted)'}">
+          ${done?'✅':'⬜'}
+        </span>
+        ${!isH ? `<span style="font-size:13px;color:${ready?'var(--green)':'var(--muted)'};">${ready?'🟢':'⏳'}</span>` : ''}
+        <span style="font-family:'Bebas Neue';font-size:16px;color:var(--gold);margin-left:4px;">${gs.scores?.[p.id]||0}pt</span>`;
+      apList.appendChild(d);
+    });
+  }
+
+  // Update host controls
+  const hostCtrl = $('game-host-controls');
+  if(isHost && hostCtrl){
+    hostCtrl.innerHTML = `
+      <div class="host-panel">
+        <div class="host-label">👑 HOST CONTROLS</div>
+        <div class="btn-group">
+          <button class="btn btn-gold" onclick="goToVote()" ${allReady?'':'disabled'}>
+            📊 ${allReady ? 'Start Voting' : `Voting (${readyCount}/${nonHostPlayers.length} ready)`}
+          </button>
+          <button class="btn btn-red btn-sm" onclick="rerollCards()">🎲 Reroll</button>
+          <button class="btn btn-red btn-sm" onclick="backToLobby()">↩ Lobby</button>
+        </div>
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up before you can proceed.</p>` : ''}
+      </div>`;
+  }
+}
+
+// Lightweight in-place update for vote screen — no showScreen, no scroll
+function updateVote(){
+  const ps = players();
+  const readyMap = gs.ready || {};
+  const nonHostPlayers = ps.filter(p => p.id !== gs.hostId);
+  const readyCount = nonHostPlayers.filter(p => readyMap[p.id]).length;
+  const allReady   = nonHostPlayers.length > 0 && nonHostPlayers.every(p => readyMap[p.id]);
+
+  // Update vote counts
+  const targets = ps.filter(p => p.id !== myId);
+  const mvc = $('my-vote-count'); if(mvc) mvc.textContent = Object.keys(myVotes).length;
+  const mvt = $('my-vote-total'); if(mvt) mvt.textContent = targets.length;
+
+  // Update ready section (non-host)
+  const voteReadySec = $('vote-ready-section');
+  if(!isHost && voteReadySec){
+    const iAmReady = readyMap[myId] || false;
+    voteReadySec.innerHTML = `
+      <div class="ready-tracker" style="margin-bottom:0;">
+        <div class="ready-tracker-title">⏳ READY UP WHEN YOU'VE SUBMITTED ALL VOTES</div>
+        ${iAmReady
+          ? `<button class="btn btn-outline btn-full" onclick="toggleReady()" style="border-color:var(--green);color:var(--green);margin-bottom:10px;">✅ READY — tap to unready</button>`
+          : `<button class="btn btn-green btn-full" onclick="toggleReady()" style="margin-bottom:10px;">✋ READY UP</button>`}
+        <div id="vote-ready-list"></div>
+        <div class="ready-count">Ready: <span>${readyCount}</span> / <span>${nonHostPlayers.length}</span></div>
+      </div>`;
+    const vrl = $('vote-ready-list');
+    if(vrl) nonHostPlayers.forEach(p => {
+      const r = readyMap[p.id] || false;
+      const d = document.createElement('div');
+      d.className = 'ready-player-row';
+      d.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.name}</span><span class="ready-icon">${r?'✅':'⏳'}</span>`;
+      vrl.appendChild(d);
+    });
+  }
+
+  // Update host reveal button
+  const vhc = $('vote-host-controls');
+  if(isHost && vhc){
+    vhc.innerHTML = `
+      <div class="host-panel">
+        <div class="host-label">👑 HOST CONTROLS</div>
+        <div class="btn-group">
+          <button class="btn btn-gold" onclick="revealResults()" ${allReady?'':'disabled'}>
+            🏆 ${allReady ? 'Reveal Results' : `Reveal (${readyCount}/${nonHostPlayers.length} ready)`}
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="goBackToGame()">← Back</button>
+        </div>
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up with their votes.</p>` : ''}
+      </div>`;
+  }
 }
 
 window.toggleReady = async function(){
