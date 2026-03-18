@@ -73,11 +73,12 @@ input:focus{border-color:var(--gold);}
 .room-code-box .code{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:10px;color:var(--gold);filter:drop-shadow(0 0 16px rgba(245,200,66,.4));}
 .room-code-box .share-link{font-size:11px;color:var(--muted);word-break:break-all;margin-top:8px;font-family:'Barlow Condensed',sans-serif;}
 
-.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-@media(max-width:480px){.card-grid{grid-template-columns:repeat(2,1fr);}}
-.ctoggle{background:var(--card-bg);border:2px solid rgba(200,149,42,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;opacity:.32;transition:all .2s;position:relative;}
-.ctoggle .ce{font-size:24px;display:block;margin-bottom:3px;}
-.ctoggle .cn{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);}
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(min-width:480px){.card-grid{grid-template-columns:repeat(4,1fr);}}
+.ctoggle{background:var(--card-bg);border:2px solid rgba(200,149,42,.3);border-radius:9px;padding:10px 8px;cursor:pointer;text-align:center;opacity:.32;transition:all .2s;position:relative;}
+.ctoggle .ce{font-size:22px;display:block;margin-bottom:2px;}
+.ctoggle .cn{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:var(--gold);display:block;margin-bottom:3px;}
+.ctoggle .cd{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);line-height:1.3;}
 .ctoggle.on{opacity:1;border-color:var(--card-border);}
 .ctoggle.on::after{content:'✓';position:absolute;top:4px;right:5px;font-size:10px;color:var(--green);}
 .ctoggle.locked{cursor:default !important;}
@@ -262,6 +263,9 @@ label.checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
       <div id="fool-hint-row">
         <label class="checkbox-row"><input type="checkbox" id="opt-fool-hint" checked> Show the Fool their decoy role to act as</label>
       </div>
+      <div id="vote-timer-row">
+        <label class="checkbox-row"><input type="checkbox" id="opt-vote-timer" checked> 60-second timer during voting</label>
+      </div>
     </div>
     <div class="scoring-rules mb16">
       <div class="scoring-rules-title">📋 SCORING RULES</div>
@@ -331,6 +335,8 @@ label.checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
     <div id="fool-reveals"></div>
     <div class="sec-label">Score Breakdown</div>
     <div id="results-list" class="mb20"></div>
+    <div class="sec-label">Your Votes This Round</div>
+    <div id="my-votes-summary" class="mb20" style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;"></div>
     <div class="sec-label">Scoreboard</div>
     <div class="sb mb20">
       <div class="sb-head">TOTAL SCORES</div>
@@ -435,14 +441,17 @@ function renderCardToggles(containerId, editable = true){
     } else {
       d.style.cursor = 'default';
     }
-    d.innerHTML = `<span class="ce">${c.emoji}</span><span class="cn">${c.name}</span>`;
+    d.innerHTML = `<span class="ce">${c.emoji}</span><span class="cn">${c.name}</span><span class="cd">${c.obj}</span>`;
     el.appendChild(d);
   });
 }
 function syncSettings(){
+  const foolHintEl  = $('opt-fool-hint');
+  const voteTimerEl = $('opt-vote-timer');
   update(ref(db,`rooms/${roomId}/settings`), {
     enabledCards: [...enabledCards],
-    foolHint: $('opt-fool-hint').checked,
+    foolHint:  foolHintEl  ? foolHintEl.checked  : true,
+    voteTimer: voteTimerEl ? voteTimerEl.checked : true,
   });
 }
 
@@ -454,7 +463,7 @@ window.createRoom = async function(){
   roomId = Math.random().toString(36).slice(2,7).toUpperCase();
   await set(ref(db,`rooms/${roomId}`), {
     phase:'lobby', round:1, hostId: myId,
-    settings:{ enabledCards:[...enabledCards], foolHint:true },
+    settings:{ enabledCards:[...enabledCards], foolHint:true, voteTimer:true },
     players:{ [myId]:{ id:myId, name:myName, color:COLORS[0] } },
     assignments:{}, decoys:{}, completed:{}, votes:{}, scores:{}, ready:{},
   });
@@ -560,21 +569,24 @@ function showLobby(){
     ? '<span style="font-size:12px;font-family:\'Barlow Condensed\';color:#e07070;font-weight:600;letter-spacing:1px;">HOST ONLY</span>'
     : '<span style="font-size:12px;font-family:\'Barlow Condensed\';color:var(--muted);letter-spacing:1px;">Set by host</span>';
 
-  // Fool hint row — editable for host, read-only label for guests
+  // Fool hint row
   const foolHintRow = $('fool-hint-row');
   if(isHost){
     foolHintRow.innerHTML = `<label class="checkbox-row"><input type="checkbox" id="opt-fool-hint" ${(gs.settings?.foolHint ?? true) ? 'checked' : ''}> Show the Fool their decoy role to act as</label>`;
     $('opt-fool-hint').addEventListener('change', () => { if(roomId) syncSettings(); });
   } else {
     const foolHintOn = gs.settings?.foolHint ?? true;
-    foolHintRow.innerHTML = `<div style="font-family:'Barlow Condensed';font-size:16px;color:var(--muted);padding:4px 0;">
-      ${foolHintOn ? '✅' : '❌'} Show the Fool their decoy role — <em>${foolHintOn ? 'enabled' : 'disabled'}</em> by host
-    </div>`;
+    foolHintRow.innerHTML = `<div style="font-family:'Barlow Condensed';font-size:15px;color:var(--muted);padding:2px 0;">${foolHintOn?'✅':'❌'} Show Fool their decoy — <em>${foolHintOn?'enabled':'disabled'}</em></div>`;
   }
 
-  if(gs.settings && isHost){
-    const el = $('opt-fool-hint');
-    if(el) el.checked = gs.settings.foolHint ?? true;
+  // Vote timer row
+  const voteTimerRow = $('vote-timer-row');
+  if(isHost){
+    voteTimerRow.innerHTML = `<label class="checkbox-row"><input type="checkbox" id="opt-vote-timer" ${(gs.settings?.voteTimer ?? true) ? 'checked' : ''}> 60-second timer during voting</label>`;
+    $('opt-vote-timer').addEventListener('change', () => { if(roomId) syncSettings(); });
+  } else {
+    const voteTimerOn = gs.settings?.voteTimer ?? true;
+    voteTimerRow.innerHTML = `<div style="font-family:'Barlow Condensed';font-size:15px;color:var(--muted);padding:2px 0;">${voteTimerOn?'✅':'❌'} 60-second vote timer — <em>${voteTimerOn?'enabled':'disabled'}</em></div>`;
   }
 
   // Host sees Start button; guests see a waiting message
@@ -974,19 +986,17 @@ function updateVote(){
     });
   }
 
-  // Update host reveal button
+  // Update host reveal button — always enabled
   const vhc = $('vote-host-controls');
   if(isHost && vhc){
     vhc.innerHTML = `
       <div class="host-panel">
         <div class="host-label">👑 HOST CONTROLS</div>
         <div class="btn-group">
-          <button class="btn btn-gold" onclick="revealResults()" ${allReady?'':'disabled'}>
-            🏆 ${allReady ? 'Reveal Results' : `Reveal (${readyCount}/${nonHostPlayers.length} ready)`}
-          </button>
+          <button class="btn btn-gold" onclick="window.revealResults()">🏆 Reveal Results</button>
           <button class="btn btn-outline btn-sm" onclick="goBackToGame()">← Back</button>
         </div>
-        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up with their votes.</p>` : ''}
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">${readyCount}/${nonHostPlayers.length} players ready — you can reveal anytime.</p>` : '<p style="font-family:\'Barlow Condensed\';font-size:13px;color:var(--green);margin-top:10px;">All players ready!</p>'}
       </div>`;
   }
 }
@@ -1002,15 +1012,21 @@ window.goToVote = async function(){
   myVotes = {};
   const readyReset = {};
   players().forEach(p => { readyReset[p.id] = false; });
-  const voteDeadline = Date.now() + 60000; // 60 seconds from now
+  const timerOn = gs.settings?.voteTimer ?? true;
+  const voteDeadline = timerOn ? Date.now() + 60000 : null;
   await update(ref(db,`rooms/${roomId}`),{phase:'vote', votes:{}, ready: readyReset, voteDeadline});
 };
 
 // ── VOTE TIMER ────────────────────────────────────────────────────────────────
 function startVoteTimer(){
-  stopVoteTimer(); // clear any existing
+  stopVoteTimer();
+  const timerEl = $('vote-timer');
   const deadline = gs.voteDeadline;
-  if(!deadline) return;
+  if(!deadline){
+    if(timerEl) timerEl.style.display = 'none';
+    return;
+  }
+  if(timerEl) timerEl.style.display = '';
 
   function tick(){
     const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
@@ -1024,11 +1040,10 @@ function startVoteTimer(){
     }
     if(remaining <= 0){
       stopVoteTimer();
-      // Only the host triggers the reveal when time runs out
-      if(isHost && gs.phase === 'vote') revealResults();
+      if(isHost && gs.phase === 'vote') window.revealResults();
     }
   }
-  tick(); // run immediately
+  tick();
   voteTimerInterval = setInterval(tick, 500);
 }
 
@@ -1038,11 +1053,12 @@ function stopVoteTimer(){
 
 function renderVote(){
   showScreen('vote-screen');
-  startVoteTimer(); // start/sync the countdown
+  startVoteTimer();
   const ps      = players();
   const enabled = gs.settings?.enabledCards || [...enabledCards];
-  const targets = ps.filter(p => p.id !== myId);
-  const readyMap = gs.ready || {};
+  // Everyone votes on everyone except themselves — host IS a valid vote target
+  const targets    = ps.filter(p => p.id !== myId);
+  const readyMap   = gs.ready || {};
   const nonHostPlayers = ps.filter(p => p.id !== gs.hostId);
   const readyCount = nonHostPlayers.filter(p => readyMap[p.id]).length;
   const allReady   = nonHostPlayers.length > 0 && nonHostPlayers.every(p => readyMap[p.id]);
@@ -1050,44 +1066,43 @@ function renderVote(){
   $('my-vote-count').textContent = Object.keys(myVotes).length;
   $('my-vote-total').textContent = targets.length;
 
-  // Ready-up for vote phase (non-host)
+  // Ready-up section (non-host only)
   const voteReadySec = $('vote-ready-section');
   if(!isHost){
     const iAmReady = readyMap[myId] || false;
     voteReadySec.innerHTML = `
       <div class="ready-tracker" style="margin-bottom:0;">
-        <div class="ready-tracker-title">⏳ READY UP WHEN YOU'VE SUBMITTED ALL VOTES</div>
+        <div class="ready-tracker-title">⏳ READY UP WHEN DONE VOTING</div>
         ${iAmReady
           ? `<button class="btn btn-outline btn-full" onclick="toggleReady()" style="border-color:var(--green);color:var(--green);margin-bottom:10px;">✅ READY — tap to unready</button>`
           : `<button class="btn btn-green btn-full" onclick="toggleReady()" style="margin-bottom:10px;">✋ READY UP</button>`}
         <div id="vote-ready-list"></div>
         <div class="ready-count">Ready: <span>${readyCount}</span> / <span>${nonHostPlayers.length}</span></div>
       </div>`;
-    const vrl = document.getElementById('vote-ready-list');
-    if(vrl){
-      nonHostPlayers.forEach(p => {
-        const r = readyMap[p.id] || false;
-        const d = document.createElement('div');
-        d.className = 'ready-player-row';
-        d.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.name}</span><span class="ready-icon">${r?'✅':'⏳'}</span>`;
-        vrl.appendChild(d);
-      });
-    }
+    const vrl = $('vote-ready-list');
+    if(vrl) nonHostPlayers.forEach(p => {
+      const r = readyMap[p.id] || false;
+      const d = document.createElement('div');
+      d.className = 'ready-player-row';
+      d.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.name}</span><span class="ready-icon">${r?'✅':'⏳'}</span>`;
+      vrl.appendChild(d);
+    });
   } else {
     voteReadySec.innerHTML = '';
   }
 
-  // Vote panels
+  // Vote panels — one per other player
   const panels = $('vote-panels');
   panels.innerHTML = '';
   targets.forEach(target => {
     const curVote = myVotes[target.id] || null;
+    const isH     = target.id === gs.hostId;
     const sec     = document.createElement('div');
     sec.className = 'vote-target';
     sec.innerHTML = `
       <div class="vote-target-header">
         <span class="dot" style="background:${target.color}"></span>
-        ${target.name}'s card?
+        ${target.name}'s card?${isH ? ' <span style="font-size:13px;font-family:\'Barlow Condensed\';color:#e07070">(HOST)</span>' : ''}
       </div>`;
     const grid = document.createElement('div');
     grid.className = 'vote-options';
@@ -1103,19 +1118,17 @@ function renderVote(){
     panels.appendChild(sec);
   });
 
-  // Host controls
+  // Host controls — reveal is always clickable for host (not gated on allReady)
   const vhc = $('vote-host-controls');
   if(isHost){
     vhc.innerHTML = `
       <div class="host-panel">
         <div class="host-label">👑 HOST CONTROLS</div>
         <div class="btn-group">
-          <button class="btn btn-gold" onclick="revealResults()" ${allReady?'':'disabled'}>
-            🏆 ${allReady ? 'Reveal Results' : `Reveal (${readyCount}/${nonHostPlayers.length} ready)`}
-          </button>
+          <button class="btn btn-gold" onclick="window.revealResults()">🏆 Reveal Results</button>
           <button class="btn btn-outline btn-sm" onclick="goBackToGame()">← Back</button>
         </div>
-        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">Waiting for all players to ready up with their votes.</p>` : ''}
+        ${!allReady ? `<p style="font-family:'Barlow Condensed';font-size:13px;color:var(--muted);margin-top:10px;">${readyCount}/${nonHostPlayers.length} players ready — you can reveal early anytime.</p>` : '<p style="font-family:\'Barlow Condensed\';font-size:13px;color:var(--green);margin-top:10px;">All players ready!</p>'}
       </div>`;
   } else {
     vhc.innerHTML = '';
@@ -1125,8 +1138,46 @@ function renderVote(){
 function castVote(targetId, cardId){
   myVotes[targetId] = cardId;
   update(ref(db,`rooms/${roomId}/votes/${myId}`),{[targetId]:cardId});
-  $('my-vote-count').textContent = Object.keys(myVotes).length;
-  renderVote();
+  // Update count display
+  const mvc = $('my-vote-count');
+  if(mvc) mvc.textContent = Object.keys(myVotes).length;
+  // Update just the selected button in this target's grid — no full re-render
+  const allBtns = document.querySelectorAll('.vote-btn');
+  allBtns.forEach(btn => {
+    if(btn.onclick && btn.onclick.toString().includes(`'${targetId}'`)){
+      btn.classList.toggle('selected', btn.innerHTML.includes(cardId));
+    }
+  });
+  // Simpler: just re-render the vote panels only (not the whole screen)
+  const ps      = players();
+  const enabled = gs.settings?.enabledCards || [...enabledCards];
+  const targets = ps.filter(p => p.id !== myId);
+  const panels  = $('vote-panels');
+  if(!panels) return;
+  panels.innerHTML = '';
+  targets.forEach(target => {
+    const curVote = myVotes[target.id] || null;
+    const isH     = target.id === gs.hostId;
+    const sec     = document.createElement('div');
+    sec.className = 'vote-target';
+    sec.innerHTML = `
+      <div class="vote-target-header">
+        <span class="dot" style="background:${target.color}"></span>
+        ${target.name}'s card?${isH?' <span style="font-size:13px;font-family:\'Barlow Condensed\';color:#e07070">(HOST)</span>':''}
+      </div>`;
+    const grid = document.createElement('div');
+    grid.className = 'vote-options';
+    enabled.forEach(cid => {
+      const c = cardDef(cid); if(!c) return;
+      const btn = document.createElement('button');
+      btn.className = 'vote-btn' + (curVote===cid?' selected':'');
+      btn.onclick   = () => castVote(target.id, cid);
+      btn.innerHTML = `<span class="ve">${c.emoji}</span><span class="vn">${c.name}</span>`;
+      grid.appendChild(btn);
+    });
+    sec.appendChild(grid);
+    panels.appendChild(sec);
+  });
 }
 
 window.goBackToGame = async function(){
@@ -1315,6 +1366,39 @@ function renderResults(){
       </div>`;
     list.appendChild(d);
   });
+
+  // ── MY VOTES SUMMARY ──────────────────────────────────────────────────────────
+  const allVotesForDisplay = gs.votes || {};
+  const myVotesThisRound   = allVotesForDisplay[myId] || {};
+  const myVotesSummaryEl   = $('my-votes-summary');
+  if(myVotesSummaryEl){
+    myVotesSummaryEl.innerHTML = '';
+    const otherPlayers = ps.filter(p => p.id !== myId);
+    if(otherPlayers.length > 0){
+      otherPlayers.forEach(p => {
+        const guessed   = myVotesThisRound[p.id];
+        const realCard  = assignments[p.id];
+        const correct   = guessed && guessed === realCard;
+        const guessedC  = cardDef(guessed);
+        const realC     = cardDef(realCard);
+        const d = document.createElement('div');
+        d.className = 'bd-row';
+        d.innerHTML = `
+          <span class="bd-label">
+            <span class="dot" style="background:${p.color};display:inline-block;margin-right:6px;"></span>
+            ${p.name}
+          </span>
+          <span style="display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed';font-size:14px;">
+            ${guessed
+              ? `<span>You guessed: ${guessedC?.emoji} ${guessedC?.name}</span>
+                 <span class="bd-val ${correct?'bd-pos':'bd-neg'}">${correct?'✓ Correct':'✗ Wrong (was '+realC?.name+')'}</span>`
+              : `<span style="color:var(--muted)">No vote submitted</span>`
+            }
+          </span>`;
+        myVotesSummaryEl.appendChild(d);
+      });
+    }
+  }
 
   // Scoreboard
   const sorted   = [...ps].sort((a,b) => (scores[b.id]||0)-(scores[a.id]||0));
