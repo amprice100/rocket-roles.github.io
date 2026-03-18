@@ -373,7 +373,6 @@ const firebaseConfig = {
       storageBucket: "rocket-league-game.firebasestorage.app",
       messagingSenderId: "103132372015",
       appId: "1:103132372015:web:887a3cc5b0f6eebe75fada"
-};
 // ══════════════════════════════════════════════════════════
 
 const app = initializeApp(firebaseConfig);
@@ -528,8 +527,13 @@ function listenRoom(){
         }
         break;
       case 'vote':
-        if(currentScreenId !== 'vote-screen') renderVote();
-        else updateVote();
+        // Reset local votes whenever we enter the vote phase fresh
+        if(currentScreenId !== 'vote-screen') {
+          myVotes = {};
+          renderVote();
+        } else {
+          updateVote();
+        }
         break;
       case 'results':
         renderResults();
@@ -1232,15 +1236,13 @@ window.revealResults = async function(){
     const isFoolCard = assignments[target.id] === 'fool';
 
     if(isFoolCard && guessers.length > 0){
-      // Fool was caught — lose ALL 4 objective points
+      // Fool was caught — undo ONLY the +4 from step 1 (if they completed).
+      // Never subtract from prior-round scores.
       foolCaught[target.id] = true;
-      scores[target.id] -= 4; // reverse the +4 given in step 1 (if they completed), or just subtract 4 regardless
-      // Actually: fool loses 4 pts total from their current running score this round
-      // The +4 was already added if they "completed"; now we wipe it by subtracting 4
-      // If they didn't complete, score was 0 from objective, subtract 4 → goes negative (harsh but fair)
-      // Per the rule: "lose all of their 4 points" — interpreted as lose 4 from total
-      roundStolenFromMe[target.id] = 4;
-      // Each correct guesser still gets their +1
+      const foolObjPts = completed[target.id] ? 4 : 0;
+      scores[target.id] -= foolObjPts; // removes the +4 if they completed, 0 change if they didn't
+      roundStolenFromMe[target.id] = foolObjPts;
+      // Each correct guesser gets +1
       guessers.forEach(voterId => {
         roundGainFromGuessing[voterId] = (roundGainFromGuessing[voterId]||0) + 1;
         scores[voterId] += 1;
@@ -1263,11 +1265,14 @@ window.revealResults = async function(){
 
   const breakdown = {};
   ps.forEach(p => {
+    const isFool  = assignments[p.id] === 'fool';
+    const caught  = foolCaught[p.id] || false;
     breakdown[p.id] = {
-      objPts:           completed[p.id] ? 4 : 0,
+      // Fool's objective points are 0 if caught (the +4 was reversed), otherwise normal
+      objPts:           (isFool && caught) ? 0 : (completed[p.id] ? 4 : 0),
       stolenFromMe:     roundStolenFromMe[p.id]     || 0,
       gainFromGuessing: roundGainFromGuessing[p.id] || 0,
-      foolCaught:       foolCaught[p.id]            || false,
+      foolCaught:       caught,
     };
     // Clamp to 0 — scores can never go negative
     scores[p.id] = Math.max(0, scores[p.id]);
