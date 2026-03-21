@@ -359,7 +359,7 @@ label.checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect }
+import { getDatabase, ref, set, get, onValue, update, remove }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ══════════════════════════════════════════════════════════
@@ -393,6 +393,7 @@ const COLORS = ['#3d8ef0','#e03535','#2ecc80','#f5c842','#9b59f5','#f57c30','#e8
 
 let myId         = 'p' + Date.now() + Math.random().toString(36).slice(2,6);
 let myName       = '';
+let myColor      = COLORS[0];
 let roomId       = null;
 let gs           = null;
 let isHost       = false;
@@ -461,16 +462,15 @@ window.createRoom = async function(){
   if(!myName){ notify('Enter your name first!','red'); return; }
   isHost = true;
   roomId = Math.random().toString(36).slice(2,7).toUpperCase();
+  myColor = COLORS[0];
   const roomData = {
     phase:'lobby', round:1, hostId: myId,
     settings:{ enabledCards:[...enabledCards], foolHint:true, voteTimer:true },
-    players:{ [myId]:{ id:myId, name:myName, color:COLORS[0] } },
+    players:{ [myId]:{ id:myId, name:myName, color:myColor } },
     assignments:{}, decoys:{}, completed:{}, votes:{}, scores:{}, ready:{},
   };
   await set(ref(db,`rooms/${roomId}`), roomData);
-  gs = roomData; // set gs so showLobby has data before listener fires
-  const presRef = ref(db, `rooms/${roomId}/players/${myId}`);
-  onDisconnect(presRef).remove();
+  gs = roomData;
   listenRoom();
   showLobby();
 };
@@ -487,14 +487,10 @@ window.joinRoom = async function(){
   isHost = (gs.hostId === myId);
   if(gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
   const colorIdx = Object.keys(gs.players||{}).length % COLORS.length;
+  myColor = COLORS[colorIdx];
   await update(ref(db,`rooms/${roomId}/players`), {
-    [myId]:{ id:myId, name:myName, color:COLORS[colorIdx] }
+    [myId]:{ id:myId, name:myName, color:myColor }
   });
-
-  // Auto-remove player when they disconnect
-  const presRef = ref(db, `rooms/${roomId}/players/${myId}`);
-  onDisconnect(presRef).remove();
-
   listenRoom();
 };
 
@@ -510,6 +506,14 @@ function listenRoom(){
     gs = snap.val();
     isHost = (gs.hostId === myId);
     if(gs.settings?.enabledCards) enabledCards = new Set(gs.settings.enabledCards);
+
+    // Reconnect guard: if our player entry disappeared (network blip), silently re-add
+    if(myName && !gs.players?.[myId]){
+      update(ref(db,`rooms/${roomId}/players`), {
+        [myId]:{ id:myId, name:myName, color:myColor }
+      });
+      return; // listener will fire again after re-add
+    }
     const phase = gs.phase;
     // Only call showScreen (which scrolls) when the phase actually changes
     // For in-phase updates, call update-only functions that don't touch scroll
